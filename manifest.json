@@ -1,13 +1,15 @@
 {
-  "name": "Auto Elétrica — Sistema de Gestão",
+  "name": "AutoElétrica — Gestão",
   "short_name": "AutoElétrica",
   "description": "Sistema completo de gestão para auto elétricas: estoque, clientes, produtos, vendas e relatórios.",
   "start_url": "./index.html",
+  "id": "autoeletrica-gestao-app",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#1a2744",
   "theme_color": "#1a2744",
   "orientation": "portrait",
   "lang": "pt-BR",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "icon-192.png",
@@ -21,5 +23,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": []
 }
