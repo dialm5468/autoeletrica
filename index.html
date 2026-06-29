@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#1a2744" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="AutoElétrica" />
+<meta name="description" content="Sistema de gestão para auto elétrica" />
+<title>Auto Elétrica — Gestão</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.9.0/dist/tabler-icons.min.css" />
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-light: #253660;
+    --green: #1a7a4a;
+    --green-bg: #e6f4ed;
+    --green-text: #0f5c35;
+    --red: #b83232;
+    --red-bg: #faeaea;
+    --red-text: #8a2020;
+    --amber: #cc7a00;
+    --amber-bg: #fff3e0;
+    --blue-bg: #e6f0fb;
+    --blue-text: #1a4080;
+    --purple-bg: #f0ebfa;
+    --purple-text: #5a30a0;
+    --surface: #ffffff;
+    --surface-alt: #f5f5f3;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text-sec: #555550;
+    --text-muted: #888880;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f0ee; color: var(--text); min-height: 100vh; }
+  .app { max-width: 480px; margin: 0 auto; padding: 10px 10px 80px; }
+  
+  /* Header */
+  .header { background: var(--navy); color: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 11px; }
+  .header .icon { font-size: 28px; }
+  .header h1 { font-size: 16px; font-weight: 600; }
+  .header p { font-size: 11px; opacity: .65; margin-top: 2px; }
+  
+  /* Bottom nav */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 0.5px solid var(--border); display: flex; z-index: 100; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); }
+  .nav-btn { flex: 1; padding: 8px 2px 10px; border: none; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+  .nav-btn i { font-size: 20px; }
+  .nav-btn.active { color: var(--navy); }
+  .nav-btn.active i { font-weight: 600; }
+  
+  /* Cards */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 14px; padding: 13px 14px; margin-bottom: 11px; }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; gap: 5px; }
+  .card-title i { font-size: 14px; }
+  
+  /* Forms */
+  .fr { margin-bottom: 9px; }
+  .lbl { font-size: 12px; color: var(--text-sec); margin-bottom: 3px; display: block; font-weight: 500; }
+  input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface-alt); color: var(--text); font-size: 14px; font-family: inherit; appearance: none; -webkit-appearance: none; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--navy); background: white; }
+  textarea { resize: none; height: 60px; line-height: 1.5; }
+  .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .r3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+  
+  /* Buttons */
+  .btn { width: 100%; padding: 11px; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity .15s, transform .1s; font-family: inherit; }
+  .btn:active { opacity: .8; transform: scale(0.98); }
+  .btn-navy { background: var(--navy); color: white; }
+  .btn-green { background: var(--green); color: white; }
+  .btn-red { background: var(--red); color: white; }
+  .btn-out { background: transparent; color: var(--text); border: 1px solid var(--border-strong); margin-top: 6px; }
+  .btn-sm { padding: 7px 12px; font-size: 12px; width: auto; border-radius: 20px; }
+  
+  /* Stats grid */
+  .stats2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 11px; }
+  .stat { background: var(--surface); border-radius: var(--radius); padding: 10px 12px; border: 0.5px solid var(--border); }
+  .stat-l { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .stat-v { font-size: 19px; font-weight: 700; }
+  .g { color: var(--green); }
+  .r { color: var(--red); }
+  .b { color: var(--navy); }
+  .o { color: var(--amber); }
+  
+  /* List items */
+  .list { display: flex; flex-direction: column; gap: 6px; }
+  .row-item { background: var(--surface-alt); border-radius: var(--radius); padding: 9px 11px; display: flex; align-items: center; gap: 9px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .av-g { background: var(--green-bg); color: var(--green-text); }
+  .av-r { background: var(--red-bg); color: var(--red-text); }
+  .av-b { background: var(--blue-bg); color: var(--blue-text); }
+  .av-p { background: var(--purple-bg); color: var(--purple-text); }
+  .av-a { background: var(--amber-bg); color: var(--amber); }
+  .ri { flex: 1; min-width: 0; }
+  .rn { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rd { font-size: 11px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rv { font-size: 13px; font-weight: 600; flex-shrink: 0; text-align: right; }
+  .del-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; padding: 3px 5px; flex-shrink: 0; border-radius: 6px; }
+  .del-btn:hover, .del-btn:active { color: var(--red); background: var(--red-bg); }
+  
+  /* Alerts */
+  .alert-box { border-left: 3px solid var(--red); border-radius: 0 var(--radius) var(--radius) 0; background: var(--red-bg); padding: 8px 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .alert-box.warn { border-color: var(--amber); background: var(--amber-bg); }
+  .alert-box i { font-size: 16px; flex-shrink: 0; }
+  .alert-box .at { font-size: 12px; font-weight: 600; }
+  .alert-box .as { font-size: 11px; color: var(--text-sec); margin-top: 1px; }
+  
+  /* Progress bars */
+  .prog-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .prog-l { font-size: 11px; color: var(--text-sec); width: 90px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prog-b { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .prog-f { height: 5px; border-radius: 3px; }
+  .prog-v { font-size: 11px; font-weight: 600; width: 55px; text-align: right; flex-shrink: 0; }
+  
+  /* Tags */
+  .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+  .tag-e { background: var(--green-bg); color: var(--green-text); }
+  .tag-s { background: var(--red-bg); color: var(--red-text); }
+  .tag-v { background: var(--blue-bg); color: var(--blue-text); }
+  
+  /* Detail rows */
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-lbl { color: var(--text-sec); }
+  .detail-val { font-weight: 600; }
+  
+  /* Margem preview */
+  .margem-box { background: var(--surface-alt); border-radius: var(--radius); padding: 10px 12px; margin: 8px 0; border: 1px solid var(--border); }
+  
+  /* Search */
+  .search-wrap { margin-bottom: 9px; position: relative; }
+  .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
+  .search-wrap input { padding-left: 33px; }
+  
+  /* Divider */
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 10px 0; }
+  
+  /* Empty */
+  .empty { text-align: center; padding: 22px; color: var(--text-muted); font-size: 13px; }
+  .empty i { font-size: 30px; display: block; margin-bottom: 7px; }
+  
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--navy); color: white; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  
+  /* PWA install banner */
+  .pwa-banner { background: var(--blue-bg); border: 1px solid #b5d4f4; border-radius: 10px; padding: 11px 13px; margin-bottom: 11px; display: flex; gap: 10px; align-items: flex-start; }
+  .pwa-banner i { color: var(--navy); font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .pwa-banner p { font-size: 12px; color: var(--blue-text); line-height: 1.55; }
+  .pwa-banner strong { font-weight: 700; }
+  .pwa-close { background: none; border: none; cursor: pointer; color: var(--blue-text); font-size: 18px; flex-shrink: 0; padding: 0; }
+
+  /* Pane visibility */
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  /* Section sub-tabs */
+  .sub-tabs { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+  .sub-tab { padding: 5px 12px; border: 1px solid var(--border-strong); border-radius: 20px; background: transparent; font-size: 12px; font-weight: 500; color: var(--text-sec); cursor: pointer; font-family: inherit; }
+  .sub-tab.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  /* Venda item card */
+  .venda-item-card { background: var(--surface-alt); border-radius: var(--radius); padding: 9px 11px; margin-bottom: 5px; }
+  .venda-item-card .vi-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .venda-item-card .vi-n { font-size: 13px; font-weight: 600; }
+  .venda-item-card .vi-d { font-size: 11px; color: var(--text-muted); }
+
+  /* Product detail line */
+  .prod-line { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+  .prod-line span { font-size: 11px; color: var(--text-sec); }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1e1e1c;
+      --surface-alt: #2a2a28;
+      --border: rgba(255,255,255,0.1);
+      --border-strong: rgba(255,255,255,0.18);
+      --text: #f0f0ee;
+      --text-sec: #aaa9a4;
+      --text-muted: #777770;
+      --green-bg: #0d2e1e;
+      --green-text: #5dcaa5;
+      --red-bg: #2d0f0f;
+      --red-text: #f09595;
+      --blue-bg: #0d1e35;
+      --blue-text: #85b7eb;
+      --purple-bg: #1e1030;
+      --purple-text: #afa9ec;
+      --amber-bg: #2a1a00;
+    }
+    body { background: #131312; }
+    .bottom-nav { background: #1e1e1c; border-color: rgba(255,255,255,0.08); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <div class="header">
+    <i class="ti ti-car-garage icon" aria-hidden="true"></i>
+    <div>
+      <h1>Auto Elétrica — Gestão</h1>
+      <p>Clientes · Produtos · Estoque · Vendas</p>
+    </div>
+  </div>
+
+  <div class="pwa-banner" id="pwa-banner">
+    <i class="ti ti-smartphone" aria-hidden="true"></i>
+    <p><strong>Instalar no Android:</strong> no Chrome, toque nos 3 pontos → "Adicionar à tela inicial". Funciona offline como um app.</p>
+    <button class="pwa-close" onclick="document.getElementById('pwa-banner').style.display='none'" aria-label="Fechar"><i class="ti ti-x"></i></button>
+  </div>
+
+  <!-- PAINEL -->
+  <div class="pane active" id="pane-painel"></div>
+
+  <!-- CLIENTES -->
+  <div class="pane" id="pane-clientes">
+    <div class="card">
+      <p class="card-title"><i class="ti ti-user-plus" aria-hidden="true"></i>Cadastrar cliente</p>
+      <div class="fr"><label class="lbl">Nome completo *</label><input type="text" id="cli-nome" placeholder="João da Silva" autocomplete="off" /></div>
+      <div class="r2">
+        <div class="fr"><label class="lbl">Telefone / WhatsApp</label><input type="tel" id="cli-tel" placeholder="(62) 99999-9999" /></div>
+        <div class="fr"><label class="lbl">CPF / CNPJ</label><input type="text" id="cli-doc" placeholder="000.000.000-00" /></div>
+      </div>
+      <div class="fr"><label class="lbl">E-mail</label><input type="email" id="cli-email" placeholder="joao@email.com" /></div>
+      <div class="fr"><label class="lbl">Veículos</label><input type="text" id="cli-vei" placeholder="Ex: Gol 2015, Celta 2010..." /></div>
+      <div class="fr"><label class="lbl">Endereço</label><input type="text" id="cli-end" placeholder="Rua, número, bairro..." /></div>
+      <div class="fr"><label class="lbl">Observações</label><textarea id="cli-obs" placeholder="Informações extras, histórico..."></textarea></div>
+      <button class="btn btn-green" onclick="salvarCliente()"><i class="ti ti-plus"></i>Cadastrar cliente</button>
+    </div>
+    <div class="card">
+      <p class="card-title"><i class="ti ti-users" aria-hidden="true"></i>Clientes cadastrados (<span id="cli-count">0</span>)</p>
+      <div class="search-wrap">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="text" id="cli-busca" placeholder="Buscar por nome, telefone ou veículo..." oninput="renderListaClientes()" />
+      </div>
+      <div id="cli-lista" class="list"></div>
+    </div>
+  </div>
+
+  <!-- PRODUTOS -->
+  <div class="pane" id="pane-produtos">
+    <div class="card">
+      <p class="card-title"><i class="ti ti-package" aria-hidden="true"></i>Cadastrar produto / peça</p>
+      <div class="r2">
+        <div class="fr">
+          <label class="lbl">Categoria *</label>
+          <select id="prod-cat">
+            <option value="">Selecione...</option>
+            <option>Alternador</option><option>Motor de Partida</option><option>Bateria</option>
+            <option>Sensor</option><option>Relé / Fusível</option><option>Chicote / Cabo</option>
+            <option>Módulo / Central</option><option>Farol / Lâmpada</option>
+            <option>Correia / Tensor</option><option>Bomba Combustível</option><option>Outros</option>
+          </select>
+        </div>
+        <div class="fr"><label class="lbl">Marca</label><input type="text" id="prod-marca" placeholder="Bosch, Denso..." /></div>
+      </div>
+      <div class="fr"><label class="lbl">Nome / descrição *</label><input type="text" id="prod-nome" placeholder="Ex: Alternador 90A 12V Gol G4" autocomplete="off" /></div>
+      <div class="r2">
+        <div class="fr"><label class="lbl">Código / Ref.</label><input type="text" id="prod-cod" placeholder="0124515087" /></div>
+        <div class="fr"><label class="lbl">Unidade</label>
+          <select id="prod-un"><option>un</option><option>par</option><option>kit</option><option>metro</option><option>litro</option></select>
+        </div>
+      </div>
+      <div class="r2">
+        <div class="fr"><label class="lbl">Custo de compra (R$)</label><input type="number" id="prod-custo" placeholder="0,00" step="0.01" min="0" /></div>
+        <div class="fr"><label class="lbl">Preço de venda (R$)</label><input type="number" id="prod-venda" placeholder="0,00" step="0.01" min="0" /></div>
+      </div>
+      <div class="r2">
+        <div class="fr"><label class="lbl">Estoque mínimo</label><input type="number" id="prod-min" placeholder="2" min="0" /></div>
+        <div class="fr"><label class="lbl">Localização</label><input type="text" id="prod-local" placeholder="Prateleira A3..." /></div>
+      </div>
+      <div class="fr"><label class="lbl">Fornecedor</label><input type="text" id="prod-forn" placeholder="Distribuidora X..." /></div>
+      <div class="fr"><label class="lbl">Observações</label><textarea id="prod-obs" placeholder="Compatibilidade, versões, notas..."></textarea></div>
+      <button class="btn btn-navy" onclick="salvarProduto()"><i class="ti ti-plus"></i>Cadastrar produto</button>
+    </div>
+    <div class="card">
+      <p class="card-title"><i class="ti ti-list" aria-hidden="true"></i>Produtos cadastrados (<span id="prod-count">0</span>)</p>
+      <div class="search-wrap">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="text" id="prod-busca" placeholder="Buscar produto, código ou categoria..." oninput="renderListaProdutos()" />
+      </div>
+      <div class="fr">
+        <select id="prod-filtro-cat" onchange="renderListaProdutos()">
+          <option value="">Todas as categorias</option>
+          <option>Alternador</option><option>Motor de Partida</option><option>Bateria</option>
+          <option>Sensor</option><option>Relé / Fusível</option><option>Chicote / Cabo</option>
+          <option>Módulo / Central</option><option>Farol / Lâmpada</option>
+          <option>Correia / Tensor</option><option>Bomba Combustível</option><option>Outros</option>
+        </select>
+      </div>
+      <div id="prod-lista" class="list"></div>
+    </div>
+  </div>
+
+  <!-- MOVIMENTAÇÃO -->
+  <div class="pane" id="pane-movimentacao">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="setMovTab('entrada',this)">Entrada de estoque</button>
+      <button class="sub-tab" onclick="setMovTab('historico',this)">Histórico</button>
+    </div>
+    <div id="mov-pane-entrada">
+      <div class="card">
+        <p class="card-title"><i class="ti ti-arrow-down-circle" aria-hidden="true"></i>Registrar entrada</p>
+        <div class="fr"><label class="lbl">Produto *</label>
+          <select id="mov-prod"><option value="">Selecione o produto...</option></select>
+        </div>
+        <div class="r2">
+          <div class="fr"><label class="lbl">Quantidade *</label><input type="number" id="mov-qtd" placeholder="1" min="1" /></div>
+          <div class="fr"><label class="lbl">Custo unitário (R$) *</label><input type="number" id="mov-custo" placeholder="0,00" step="0.01" min="0" /></div>
+        </div>
+        <div class="r2">
+          <div class="fr"><label class="lbl">Nota Fiscal</label><input type="text" id="mov-nf" placeholder="NF 00001" /></div>
+          <div class="fr"><label class="lbl">Fornecedor</label><input type="text" id="mov-forn" placeholder="Distribuidora..." /></div>
+        </div>
+        <div class="fr"><label class="lbl">Data (padrão: hoje)</label><input type="date" id="mov-data" /></div>
+        <button class="btn btn-green" onclick="registrarEntrada()"><i class="ti ti-plus"></i>Registrar entrada</button>
+      </div>
+    </div>
+    <div id="mov-pane-historico" style="display:none">
+      <div class="card">
+        <p class="card-title"><i class="ti ti-history" aria-hidden="true"></i>Histórico de entradas</p>
+        <div id="mov-historico-lista" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENDAS -->
+  <div class="pane" id="pane-vendas">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="setVndTab('nova',this)">Nova venda</button>
+      <button class="sub-tab" onclick="setVndTab('historico',this)">Histórico</button>
+    </div>
+    <div id="vnd-pane-nova">
+      <div class="card">
+        <p class="card-title"><i class="ti ti-shopping-cart" aria-hidden="true"></i>Dados da venda</p>
+        <div class="fr"><label class="lbl">Cliente</label>
+          <select id="vnd-cli"><option value="">Cliente avulso / sem cadastro</option></select>
+        </div>
+        <div class="fr"><label class="lbl">Serviço / descrição</label>
+          <input type="text" id="vnd-serv" placeholder="Ex: Troca de alternador, diagnóstico elétrico..." />
+        </div>
+        <div class="fr"><label class="lbl">Forma de pagamento</label>
+          <select id="vnd-pgto">
+            <option>Dinheiro</option><option>PIX</option><option>Cartão Débito</option>
+            <option>Cartão Crédito</option><option>Boleto</option><option>Fiado</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <p class="card-title"><i class="ti ti-circle-plus" aria-hidden="true"></i>Adicionar item à venda</p>
+        <div class="fr"><label class="lbl">Produto em estoque</label>
+          <select id="vnd-prod" onchange="preencherPrecoVenda()"><option value="">Selecione...</option></select>
+        </div>
+        <div class="r2">
+          <div class="fr"><label class="lbl">Quantidade</label><input type="number" id="vnd-qtd" placeholder="1" min="1" value="1" oninput="atualizarMargem()" /></div>
+          <div class="fr"><label class="lbl">Preço venda (R$)</label><input type="number" id="vnd-preco" placeholder="0,00" step="0.01" oninput="atualizarMargem()" /></div>
+        </div>
+        <div id="margem-prev" style="display:none" class="margem-box">
+          <div class="detail-row"><span class="detail-lbl">Custo total</span><span id="prev-custo" class="r detail-val"></span></div>
+          <div class="detail-row"><span class="detail-lbl">Receita</span><span id="prev-rec" class="g detail-val"></span></div>
+          <div class="detail-row"><span class="detail-lbl">Lucro</span><span id="prev-luc" class="detail-val"></span></div>
+          <div class="detail-row" style="border:none"><span class="detail-lbl">Margem</span><span id="prev-pct" class="detail-val"></span></div>
+        </div>
+        <button class="btn btn-out" onclick="addItemVenda()"><i class="ti ti-plus"></i>Adicionar item</button>
+      </div>
+      <div class="card" id="card-itens-venda" style="display:none">
+        <p class="card-title"><i class="ti ti-list-check" aria-hidden="true"></i>Itens da venda</p>
+        <div id="itens-venda-lista"></div>
+        <hr class="divider" />
+        <div class="margem-box">
+          <div class="detail-row"><span class="detail-lbl">Total receita</span><span id="tot-rec" class="g detail-val"></span></div>
+          <div class="detail-row"><span class="detail-lbl">Total custo</span><span id="tot-cus" class="r detail-val"></span></div>
+          <div class="detail-row" style="border:none"><span class="detail-lbl" style="font-weight:700">Lucro bruto</span><span id="tot-luc" class="detail-val" style="font-size:15px"></span></div>
+        </div>
+        <button class="btn btn-navy" onclick="finalizarVenda()"><i class="ti ti-check"></i>Finalizar venda</button>
+      </div>
+    </div>
+    <div id="vnd-pane-historico" style="display:none">
+      <div class="card">
+        <p class="card-title"><i class="ti ti-history" aria-hidden="true"></i>Vendas realizadas</p>
+        <div id="vnd-historico-lista" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTOQUE -->
+  <div class="pane" id="pane-estoque">
+    <div class="stats2" id="est-stats"></div>
+    <div class="card" id="alertas-card" style="display:none">
+      <p class="card-title"><i class="ti ti-bell" aria-hidden="true"></i>Alertas de reposição</p>
+      <div id="alertas-lista"></div>
+    </div>
+    <div class="card">
+      <p class="card-title"><i class="ti ti-package" aria-hidden="true"></i>Posição de estoque</p>
+      <div class="fr">
+        <select id="est-filtro" onchange="renderEstoque()">
+          <option value="">Todas as categorias</option>
+          <option>Alternador</option><option>Motor de Partida</option><option>Bateria</option>
+          <option>Sensor</option><option>Relé / Fusível</option><option>Chicote / Cabo</option>
+          <option>Módulo / Central</option><option>Farol / Lâmpada</option>
+          <option>Correia / Tensor</option><option>Bomba Combustível</option><option>Outros</option>
+        </select>
+      </div>
+      <div id="est-lista" class="list"></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div class="pane" id="pane-relatorio">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="setRelTab('financeiro',this)">Financeiro</button>
+      <button class="sub-tab" onclick="setRelTab('produtos',this)">Produtos</button>
+      <button class="sub-tab" onclick="setRelTab('clientes',this)">Clientes</button>
+    </div>
+    <div id="rel-financeiro"></div>
+    <div id="rel-produtos" style="display:none"></div>
+    <div id="rel-clientes" style="display:none"></div>
+  </div>
+
+</div><!-- end .app -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav" role="navigation" aria-label="Navegação principal">
+  <button class="nav-btn active" onclick="showTab('painel')" id="nav-painel"><i class="ti ti-dashboard" aria-hidden="true"></i>Painel</button>
+  <button class="nav-btn" onclick="showTab('clientes')" id="nav-clientes"><i class="ti ti-users" aria-hidden="true"></i>Clientes</button>
+  <button class="nav-btn" onclick="showTab('produtos')" id="nav-produtos"><i class="ti ti-package" aria-hidden="true"></i>Produtos</button>
+  <button class="nav-btn" onclick="showTab('movimentacao')" id="nav-movimentacao"><i class="ti ti-arrow-down-circle" aria-hidden="true"></i>Entrada</button>
+  <button class="nav-btn" onclick="showTab('vendas')" id="nav-vendas"><i class="ti ti-shopping-cart" aria-hidden="true"></i>Vendas</button>
+  <button class="nav-btn" onclick="showTab('estoque')" id="nav-estoque"><i class="ti ti-archive" aria-hidden="true"></i>Estoque</button>
+  <button class="nav-btn" onclick="showTab('relatorio')" id="nav-relatorio"><i class="ti ti-chart-bar" aria-hidden="true"></i>Relatório</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ===== DATABASE ===== */
+const DB = { clientes: [], produtos: [], movs: [], vendas: [] };
+
+function dbSave() {
+  try { localStorage.setItem('ae_v2', JSON.stringify(DB)); } catch(e) {}
+}
+function dbLoad() {
+  try {
+    const d = localStorage.getItem('ae_v2');
+    if (d) { const p = JSON.parse(d); Object.assign(DB, p); }
+  } catch(e) {}
+}
+dbLoad();
+
+/* ===== UTILS ===== */
+function fmt(v) { return 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pct(v) { return parseFloat(v||0).toFixed(1) + '%'; }
+function uid() { return Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+function nowStr() {
+  const d = new Date();
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function todayISO() { return new Date().toISOString().slice(0,10); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toast(msg, dur=2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+/* ===== NAVIGATION ===== */
+const TABS = ['painel','clientes','produtos','movimentacao','vendas','estoque','relatorio'];
+function showTab(t) {
+  TABS.forEach(x => {
+    document.getElementById('pane-'+x).classList.toggle('active', x===t);
+    document.getElementById('nav-'+x).classList.toggle('active', x===t);
+  });
+  if(t==='painel') renderPainel();
+  if(t==='clientes') renderClientes();
+  if(t==='produtos') renderProdutos();
+  if(t==='movimentacao') renderMovimentacao();
+  if(t==='vendas') renderVendas();
+  if(t==='estoque') renderEstoque();
+  if(t==='relatorio') renderRelatorio();
+  window.scrollTo(0,0);
+}
+
+/* ===== ESTOQUE CALC ===== */
+function calcEstoque() {
+  const est = {};
+  DB.movs.forEach(m => {
+    if(!est[m.prodId]) est[m.prodId] = {qtd:0, totalCusto:0, totalQtdEntrada:0, custoMedio:0};
+    if(m.tipo==='entrada') {
+      est[m.prodId].qtd += m.qtd;
+      est[m.prodId].totalQtdEntrada += m.qtd;
+      est[m.prodId].totalCusto += m.qtd * m.custo;
+      est[m.prodId].custoMedio = est[m.prodId].totalCusto / est[m.prodId].totalQtdEntrada;
+    } else {
+      est[m.prodId].qtd -= m.qtd;
+    }
+  });
+  return est;
+}
+
+function getEstItem(prodId) {
+  const est = calcEstoque();
+  return est[prodId] || {qtd:0, custoMedio:0, totalCusto:0, totalQtdEntrada:0};
+}
+
+/* ===== PAINEL ===== */
+function renderPainel() {
+  const est = calcEstoque();
+  const receita = DB.vendas.reduce((a,v)=>a+v.total,0);
+  const custo = DB.vendas.reduce((a,v)=>a+v.custoTotal,0);
+  const lucro = receita - custo;
+  const estVal = DB.produtos.reduce((a,p) => {
+    const e = est[p.id];
+    return a + Math.max(0, e?e.qtd:0) * (e?e.custoMedio:0);
+  }, 0);
+
+  const criticos = DB.produtos.filter(p => {
+    const e = est[p.id];
+    const q = e ? Math.max(0,e.qtd) : 0;
+    return q <= p.min && p.min > 0;
+  });
+  const zerados = DB.produtos.filter(p => {
+    const e = est[p.id];
+    return (e?e.totalQtdEntrada:0) > 0 && (e?Math.max(0,e.qtd):0) === 0;
+  });
+
+  const topVend = DB.produtos.map(p => {
+    const itens = DB.vendas.flatMap(v=>v.itens||[]).filter(i=>i.prodId===p.id);
+    const rec = itens.reduce((a,i)=>a+i.total,0);
+    const luc = itens.reduce((a,i)=>a+i.lucro,0);
+    return {nome:p.nome, rec, luc, margem: rec>0?luc/rec*100:0};
+  }).filter(x=>x.rec>0).sort((a,b)=>b.rec-a.rec).slice(0,5);
+  const maxR = topVend[0]?.rec || 1;
+
+  const recentes = [...DB.vendas].reverse().slice(0,5);
+
+  const alertasHTML = [...zerados.map(p=>
+    `<div class="alert-box"><i class="ti ti-alert-circle" style="color:var(--red)" aria-hidden="true"></i><div><div class="at">${esc(p.nome)}</div><div class="as">Estoque zerado — reposição urgente</div></div></div>`
+  ), ...criticos.filter(p=>{const e=est[p.id];return e&&Math.max(0,e.qtd)>0}).map(p=>{
+    const q = Math.max(0,est[p.id]?.qtd||0);
+    return `<div class="alert-box warn"><i class="ti ti-alert-triangle" style="color:var(--amber)" aria-hidden="true"></i><div><div class="at">${esc(p.nome)}</div><div class="as">${q} un em estoque — mínimo: ${p.min} un</div></div></div>`;
+  })].join('');
+
+  document.getElementById('pane-painel').innerHTML = `
+    <div class="stats2">
+      <div class="stat"><div class="stat-l">Receita total</div><div class="stat-v g">${fmt(receita)}</div></div>
+      <div class="stat"><div class="stat-l">Lucro bruto</div><div class="stat-v ${lucro>=0?'g':'r'}">${fmt(lucro)}</div></div>
+      <div class="stat"><div class="stat-l">Valor em estoque</div><div class="stat-v b">${fmt(estVal)}</div></div>
+      <div class="stat"><div class="stat-l">Clientes</div><div class="stat-v b">${DB.clientes.length}</div></div>
+    </div>
+    ${alertasHTML ? `<div class="card"><p class="card-title"><i class="ti ti-bell" aria-hidden="true"></i>Alertas</p>${alertasHTML}</div>` : ''}
+    ${topVend.length ? `<div class="card"><p class="card-title"><i class="ti ti-trending-up" aria-hidden="true"></i>Produtos mais vendidos</p>${topVend.map(p=>`
+      <div class="prog-row">
+        <span class="prog-l">${esc(p.nome)}</span>
+        <div class="prog-b"><div class="prog-f" style="width:${(p.rec/maxR*100).toFixed(0)}%;background:${p.margem>=30?'var(--green)':p.margem>=10?'var(--amber)':'var(--red)'}"></div></div>
+        <span class="prog-v ${p.margem>=30?'g':p.margem>=10?'o':'r'}">${fmt(p.rec)}</span>
+      </div>`).join('')}</div>` : ''}
+    <div class="card">
+      <p class="card-title"><i class="ti ti-clock" aria-hidden="true"></i>Vendas recentes</p>
+      ${recentes.length ? `<div class="list">${recentes.map(v=>{
+        const cn = v.clienteId ? (DB.clientes.find(c=>c.id===v.clienteId)?.nome||'—') : 'Avulso';
+        return `<div class="row-item"><div class="avatar av-b"><i class="ti ti-shopping-cart" aria-hidden="true"></i></div><div class="ri"><div class="rn">${esc(cn)}${v.servico?' — '+esc(v.servico):''}</div><div class="rd">${v.data} · ${v.pgto||''} · lucro ${fmt(v.lucroTotal)}</div></div><div class="rv g">${fmt(v.total)}</div></div>`;
+      }).join('')}</div>` : '<div class="empty"><i class="ti ti-shopping-cart" aria-hidden="true"></i>Nenhuma venda ainda</div>'}
+    </div>`;
+}
+
+/* ===== CLIENTES ===== */
+function salvarCliente() {
+  const nome = document.getElementById('cli-nome').value.trim();
+  if(!nome) { toast('Informe o nome do cliente'); return; }
+  DB.clientes.push({
+    id: uid(), nome,
+    tel: document.getElementById('cli-tel').value.trim(),
+    doc: document.getElementById('cli-doc').value.trim(),
+    email: document.getElementById('cli-email').value.trim(),
+    vei: document.getElementById('cli-vei').value.trim(),
+    end: document.getElementById('cli-end').value.trim(),
+    obs: document.getElementById('cli-obs').value.trim(),
+    criado: nowStr()
+  });
+  dbSave();
+  toast('Cliente cadastrado!');
+  ['cli-nome','cli-tel','cli-doc','cli-email','cli-vei','cli-end','cli-obs'].forEach(id => document.getElementById(id).value='');
+  renderClientes();
+}
+
+function delCliente(id) {
+  if(!confirm('Excluir este cliente?')) return;
+  DB.clientes = DB.clientes.filter(c=>c.id!==id);
+  dbSave(); toast('Cliente removido'); renderClientes();
+}
+
+function renderClientes() {
+  document.getElementById('cli-count').textContent = DB.clientes.length;
+  renderListaClientes();
+}
+
+function renderListaClientes() {
+  const busca = (document.getElementById('cli-busca')?.value||'').toLowerCase();
+  const lista = DB.clientes.filter(c =>
+    !busca || c.nome.toLowerCase().includes(busca) ||
+    c.tel.includes(busca) || (c.vei||'').toLowerCase().includes(busca) ||
+    (c.doc||'').includes(busca)
+  );
+  const el = document.getElementById('cli-lista');
+  if(!lista.length) { el.innerHTML='<div class="empty"><i class="ti ti-users" aria-hidden="true"></i>Nenhum cliente encontrado</div>'; return; }
+  el.innerHTML = lista.map(c => {
+    const nv = DB.vendas.filter(v=>v.clienteId===c.id).length;
+    const tv = DB.vendas.filter(v=>v.clienteId===c.id).reduce((a,v)=>a+v.total,0);
+    return `<div class="row-item">
+      <div class="avatar av-p"><i class="ti ti-user" aria-hidden="true"></i></div>
+      <div class="ri">
+        <div class="rn">${esc(c.nome)}</div>
+        <div class="rd">${c.tel?esc(c.tel):''}${c.vei?' · '+esc(c.vei):''}${nv>0?' · '+nv+' venda(s) · '+fmt(tv):''}</div>
+        ${c.email?`<div class="rd">${esc(c.email)}</div>`:''}
+      </div>
+      <button class="del-btn" onclick="delCliente('${c.id}')" aria-label="Excluir"><i class="ti ti-trash" aria-hidden="true"></i></button>
+    </div>`;
+  }).join('');
+}
+
+/* ===== PRODUTOS ===== */
+function salvarProduto() {
+  const nome = document.getElementById('prod-nome').value.trim();
+  const cat  = document.getElementById('prod-cat').value;
+  if(!nome) { toast('Informe o nome do produto'); return; }
+  DB.produtos.push({
+    id: uid(), nome, cat,
+    marca: document.getElementById('prod-marca').value.trim(),
+    cod:   document.getElementById('prod-cod').value.trim(),
+    un:    document.getElementById('prod-un').value,
+    custo: parseFloat(document.getElementById('prod-custo').value)||0,
+    venda: parseFloat(document.getElementById('prod-venda').value)||0,
+    min:   parseInt(document.getElementById('prod-min').value)||0,
+    local: document.getElementById('prod-local').value.trim(),
+    forn:  document.getElementById('prod-forn').value.trim(),
+    obs:   document.getElementById('prod-obs').value.trim(),
+    criado: nowStr()
+  });
+  dbSave();
+  toast('Produto cadastrado!');
+  ['prod-nome','prod-marca','prod-cod','prod-custo','prod-venda','prod-min','prod-local','prod-forn','prod-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('prod-cat').value='';
+  renderProdutos();
+}
+
+function delProduto(id) {
+  if(!confirm('Excluir este produto? O histórico de movimentações será mantido.')) return;
+  DB.produtos = DB.produtos.filter(p=>p.id!==id);
+  dbSave(); toast('Produto removido'); renderProdutos();
+}
+
+function renderProdutos() {
+  document.getElementById('prod-count').textContent = DB.produtos.length;
+  renderListaProdutos();
+}
+
+function renderListaProdutos() {
+  const busca = (document.getElementById('prod-busca')?.value||'').toLowerCase();
+  const cat   = document.getElementById('prod-filtro-cat')?.value||'';
+  const est   = calcEstoque();
+  const lista = DB.produtos.filter(p =>
+    (!cat || p.cat===cat) &&
+    (!busca || p.nome.toLowerCase().includes(busca) || (p.cod||'').toLowerCase().includes(busca) || (p.cat||'').toLowerCase().includes(busca) || (p.marca||'').toLowerCase().includes(busca))
+  );
+  const el = document.getElementById('prod-lista');
+  if(!lista.length) { el.innerHTML='<div class="empty"><i class="ti ti-package" aria-hidden="true"></i>Nenhum produto encontrado</div>'; return; }
+  el.innerHTML = lista.map(p => {
+    const e = est[p.id];
+    const q = e ? Math.max(0,e.qtd) : 0;
+    const cm = e ? e.custoMedio : p.custo;
+    const cor = q<=0?'var(--red)':p.min>0&&q<=p.min?'var(--amber)':'var(--green)';
+    const margem = p.venda>0 && cm>0 ? ((p.venda-cm)/p.venda*100) : 0;
+    return `<div class="row-item">
+      <div class="avatar av-a"><i class="ti ti-bolt" aria-hidden="true"></i></div>
+      <div class="ri">
+        <div class="rn">${esc(p.nome)}</div>
+        <div class="rd">${esc(p.cat)}${p.marca?' · '+esc(p.marca):''}${p.cod?' · '+esc(p.cod):''}</div>
+        <div class="prod-line">
+          <span>Custo: ${fmt(cm)}</span>
+          <span>Venda: ${fmt(p.venda)}</span>
+          ${margem>0?`<span style="color:${margem>=30?'var(--green)':margem>=10?'var(--amber)':'var(--red)'}">Margem: ${pct(margem)}</span>`:''}
+        </div>
+        <div class="prod-line">
+          <span style="color:${cor};font-weight:700">${q} ${p.un||'un'} em estoque</span>
+          ${p.local?`<span>· ${esc(p.local)}</span>`:''}
+        </div>
+      </div>
+      <button class="del-btn" onclick="delProduto('${p.id}')" aria-label="Excluir"><i class="ti ti-trash" aria-hidden="true"></i></button>
+    </div>`;
+  }).join('');
+}
+
+/* ===== MOVIMENTAÇÃO ===== */
+let movTab = 'entrada';
+function setMovTab(t, btn) {
+  movTab = t;
+  document.querySelectorAll('#pane-movimentacao .sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mov-pane-entrada').style.display = t==='entrada'?'block':'none';
+  document.getElementById('mov-pane-historico').style.display = t==='historico'?'block':'none';
+  if(t==='historico') renderMovHistorico();
+}
+
+function renderMovimentacao() {
+  const sel = document.getElementById('mov-prod');
+  sel.innerHTML = '<option value="">Selecione o produto...</option>' +
+    DB.produtos.map(p=>`<option value="${p.id}">${esc(p.nome)} (${esc(p.cat)})</option>`).join('');
+  const di = document.getElementById('mov-data');
+  if(!di.value) di.value = todayISO();
+}
+
+function registrarEntrada() {
+  const prodId = document.getElementById('mov-prod').value;
+  const qtd    = parseInt(document.getElementById('mov-qtd').value)||0;
+  const custo  = parseFloat(document.getElementById('mov-custo').value)||0;
+  const nf     = document.getElementById('mov-nf').value.trim();
+  const forn   = document.getElementById('mov-forn').value.trim();
+  const data   = document.getElementById('mov-data').value;
+  if(!prodId) { toast('Selecione um produto'); return; }
+  if(qtd<1)   { toast('Quantidade inválida'); return; }
+  if(custo<0) { toast('Custo inválido'); return; }
+  DB.movs.push({ id:uid(), tipo:'entrada', prodId, qtd, custo, nf, forn, data: data||nowStr(), criado: nowStr() });
+  dbSave();
+  toast('Entrada registrada!');
+  ['mov-qtd','mov-custo','mov-nf','mov-forn'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mov-prod').value='';
+  document.getElementById('mov-data').value = todayISO();
+}
+
+function renderMovHistorico() {
+  const el = document.getElementById('mov-historico-lista');
+  const lista = [...DB.movs].filter(m=>m.tipo==='entrada').reverse().slice(0,50);
+  el.innerHTML = lista.length ? lista.map(m => {
+    const pn = DB.produtos.find(p=>p.id===m.prodId)?.nome||'Produto removido';
+    return `<div class="row-item">
+      <div class="avatar av-g"><i class="ti ti-arrow-down-circle" aria-hidden="true"></i></div>
+      <div class="ri">
+        <div class="rn">${esc(pn)}</div>
+        <div class="rd">${m.data} · ${m.qtd} un · ${fmt(m.custo)}/un${m.nf?' · NF '+esc(m.nf):''}${m.forn?' · '+esc(m.forn):''}</div>
+      </div>
+      <div class="rv r">${fmt(m.qtd*m.custo)}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Nenhuma entrada registrada</div>';
+}
+
+/* ===== VENDAS ===== */
+let vndItens = [];
+let vndTab = 'nova';
+
+function setVndTab(t, btn) {
+  vndTab = t;
+  document.querySelectorAll('#pane-vendas .sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('vnd-pane-nova').style.display = t==='nova'?'block':'none';
+  document.getElementById('vnd-pane-historico').style.display = t==='historico'?'block':'none';
+  if(t==='historico') renderVndHistorico();
+}
+
+function renderVendas() {
+  const selCli = document.getElementById('vnd-cli');
+  selCli.innerHTML = '<option value="">Cliente avulso / sem cadastro</option>' +
+    DB.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}${c.vei?' — '+esc(c.vei):''}</option>`).join('');
+
+  const est = calcEstoque();
+  const selProd = document.getElementById('vnd-prod');
+  selProd.innerHTML = '<option value="">Selecione o produto...</option>' +
+    DB.produtos.filter(p=>{ const e=est[p.id]; return e&&e.qtd>0; }).map(p => {
+      const e = est[p.id];
+      return `<option value="${p.id}">${esc(p.nome)} (${Math.max(0,e.qtd)} ${p.un||'un'} — custo: ${fmt(e.custoMedio)})</option>`;
+    }).join('');
+
+  renderItensVenda();
+}
+
+function preencherPrecoVenda() {
+  const id = document.getElementById('vnd-prod').value;
+  if(!id) { document.getElementById('margem-prev').style.display='none'; return; }
+  const p = DB.produtos.find(x=>x.id===id);
+  if(p?.venda>0) document.getElementById('vnd-preco').value = p.venda.toFixed(2);
+  atualizarMargem();
+}
+
+function atualizarMargem() {
+  const id   = document.getElementById('vnd-prod').value;
+  const qtd  = parseInt(document.getElementById('vnd-qtd').value)||0;
+  const preco= parseFloat(document.getElementById('vnd-preco').value)||0;
+  const prev = document.getElementById('margem-prev');
+  if(!id||!qtd||!preco) { prev.style.display='none'; return; }
+  const e = getEstItem(id);
+  const custoT  = e.custoMedio * qtd;
+  const receitaT= preco * qtd;
+  const lucro   = receitaT - custoT;
+  const margem  = receitaT>0 ? (lucro/receitaT*100) : 0;
+  document.getElementById('prev-custo').textContent = fmt(custoT);
+  document.getElementById('prev-rec').textContent   = fmt(receitaT);
+  const el = document.getElementById('prev-luc');
+  el.textContent = fmt(lucro);
+  el.className = 'detail-val ' + (lucro>=0?'g':'r');
+  const ep = document.getElementById('prev-pct');
+  ep.textContent = pct(margem);
+  ep.className   = 'detail-val ' + (margem>=30?'g':margem>=10?'o':'r');
+  prev.style.display = 'block';
+}
+
+function addItemVenda() {
+  const est  = calcEstoque();
+  const prodId= document.getElementById('vnd-prod').value;
+  const qtd  = parseInt(document.getElementById('vnd-qtd').value)||0;
+  const preco= parseFloat(document.getElementById('vnd-preco').value)||0;
+  if(!prodId) { toast('Selecione um produto'); return; }
+  if(qtd<1)  { toast('Quantidade inválida'); return; }
+  if(preco<=0){ toast('Informe o preço de venda'); return; }
+  const e = est[prodId];
+  if(!e||e.qtd<qtd) { toast('Estoque insuficiente'); return; }
+  vndItens.push({ prodId, qtd, preco, total:qtd*preco, custoUnit:e.custoMedio, custoTotal:qtd*e.custoMedio, lucro:qtd*(preco-e.custoMedio) });
+  document.getElementById('vnd-prod').value='';
+  document.getElementById('vnd-qtd').value='1';
+  document.getElementById('vnd-preco').value='';
+  document.getElementById('margem-prev').style.display='none';
+  renderItensVenda();
+  renderVendas();
+}
+
+function removeItemVenda(idx) {
+  vndItens.splice(idx,1);
+  renderItensVenda();
+}
+
+function renderItensVenda() {
+  const card = document.getElementById('card-itens-venda');
+  if(!vndItens.length) { card.style.display='none'; return; }
+  card.style.display='block';
+  const totRec = vndItens.reduce((a,i)=>a+i.total,0);
+  const totCus = vndItens.reduce((a,i)=>a+i.custoTotal,0);
+  const totLuc = totRec - totCus;
+  document.getElementById('itens-venda-lista').innerHTML = vndItens.map((it,idx)=>{
+    const pn = DB.produtos.find(p=>p.id===it.prodId)?.nome||'—';
+    return `<div class="venda-item-card">
+      <div class="vi-h"><span class="vi-n">${esc(pn)}</span><button class="del-btn" onclick="removeItemVenda(${idx})" aria-label="Remover"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+      <div class="vi-d">${it.qtd} un × ${fmt(it.preco)} = <strong>${fmt(it.total)}</strong> · lucro: ${fmt(it.lucro)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('tot-rec').textContent = fmt(totRec);
+  document.getElementById('tot-cus').textContent = fmt(totCus);
+  const el = document.getElementById('tot-luc');
+  el.textContent = fmt(totLuc);
+  el.className = 'detail-val ' + (totLuc>=0?'g':'r');
+}
+
+function finalizarVenda() {
+  if(!vndItens.length) { toast('Adicione pelo menos um item'); return; }
+  const clienteId = document.getElementById('vnd-cli').value;
+  const servico   = document.getElementById('vnd-serv').value.trim();
+  const pgto      = document.getElementById('vnd-pgto').value;
+  const total     = vndItens.reduce((a,i)=>a+i.total,0);
+  const custoTotal= vndItens.reduce((a,i)=>a+i.custoTotal,0);
+  const lucroTotal= total - custoTotal;
+  DB.vendas.push({ id:uid(), clienteId, servico, pgto, itens:[...vndItens], total, custoTotal, lucroTotal, data:nowStr() });
+  vndItens.forEach(it => {
+    DB.movs.push({ id:uid(), tipo:'saida', prodId:it.prodId, qtd:it.qtd, custo:it.custoUnit, data:nowStr() });
+  });
+  vndItens = [];
+  dbSave();
+  toast('Venda finalizada!');
+  document.getElementById('vnd-cli').value='';
+  document.getElementById('vnd-serv').value='';
+  document.getElementById('card-itens-venda').style.display='none';
+  renderVendas();
+}
+
+function renderVndHistorico() {
+  const el = document.getElementById('vnd-historico-lista');
+  const lista = [...DB.vendas].reverse().slice(0,50);
+  el.innerHTML = lista.length ? lista.map(v=>{
+    const cn = v.clienteId ? (DB.clientes.find(c=>c.id===v.clienteId)?.nome||'—') : 'Avulso';
+    return `<div class="row-item">
+      <div class="avatar av-b"><i class="ti ti-shopping-cart" aria-hidden="true"></i></div>
+      <div class="ri">
+        <div class="rn">${esc(cn)}${v.servico?' — '+esc(v.servico):''}</div>
+        <div class="rd">${v.data} · ${v.pgto||''} · ${v.itens.length} item(ns)</div>
+        <div class="rd" style="color:var(--green)">Lucro: ${fmt(v.lucroTotal)}</div>
+      </div>
+      <div class="rv g">${fmt(v.total)}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Nenhuma venda registrada</div>';
+}
+
+/* ===== ESTOQUE ===== */
+function renderEstoque() {
+  const est    = calcEstoque();
+  const filtro = document.getElementById('est-filtro')?.value||'';
+  const lista  = DB.produtos.filter(p=>!filtro||p.cat===filtro);
+  const estVal = lista.reduce((a,p)=>{ const e=est[p.id]; return a+Math.max(0,e?e.qtd:0)*(e?e.custoMedio:0); },0);
+  const criticos= lista.filter(p=>{ const e=est[p.id]; const q=e?Math.max(0,e.qtd):0; return p.min>0&&q<=p.min; });
+
+  document.getElementById('est-stats').innerHTML = `
+    <div class="stat"><div class="stat-l">Itens cadastrados</div><div class="stat-v b">${lista.length}</div></div>
+    <div class="stat"><div class="stat-l">Valor em estoque</div><div class="stat-v b">${fmt(estVal)}</div></div>`;
+
+  const ac = document.getElementById('alertas-card');
+  if(criticos.length) {
+    ac.style.display='block';
+    document.getElementById('alertas-lista').innerHTML = criticos.map(p=>{
+      const q=Math.max(0,est[p.id]?.qtd||0);
+      return `<div class="alert-box ${q>0?'warn':''}">
+        <i class="ti ti-alert-${q<=0?'circle':'triangle'}" style="color:${q<=0?'var(--red)':'var(--amber)'}" aria-hidden="true"></i>
+        <div><div class="at">${esc(p.nome)}</div><div class="as">${q<=0?'Zerado':'Crítico: '+q+' un'} — mínimo: ${p.min} un · ${p.forn?'Forn: '+esc(p.forn):''}</div></div>
+      </div>`;
+    }).join('');
+  } else { ac.style.display='none'; }
+
+  const maxQ = Math.max(...lista.map(p=>{ const e=est[p.id]; return e?e.totalQtdEntrada:0; }),1);
+  document.getElementById('est-lista').innerHTML = lista.length ? lista.map(p => {
+    const e  = est[p.id];
+    const q  = e ? Math.max(0,e.qtd) : 0;
+    const cm = e ? e.custoMedio : p.custo;
+    const cor= q<=0?'var(--red)':p.min>0&&q<=p.min?'var(--amber)':'var(--green)';
+    const itens = DB.vendas.flatMap(v=>v.itens||[]).filter(i=>i.prodId===p.id);
+    const rec = itens.reduce((a,i)=>a+i.total,0);
+    const luc = itens.reduce((a,i)=>a+i.lucro,0);
+    const marg= rec>0?(luc/rec*100):0;
+    const pct_bar = Math.min(100, (q/maxQ*100));
+    return `<div class="est-item" style="background:var(--surface-alt);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:600">${esc(p.nome)}</span>
+        <span style="font-size:13px;font-weight:700;color:${cor}">${q} ${p.un||'un'}</span>
+      </div>
+      ${p.cat?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${esc(p.cat)}${p.marca?' · '+esc(p.marca):''}${p.local?' · '+esc(p.local):''}</div>`:''}
+      <div style="height:4px;background:var(--border);border-radius:2px;margin:6px 0"><div style="height:4px;border-radius:2px;width:${pct_bar.toFixed(0)}%;background:${cor}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted)">
+        <span>Custo médio: ${fmt(cm)}</span>
+        <span style="font-weight:600;color:var(--text)">${fmt(q*cm)}</span>
+      </div>
+      ${rec>0?`<div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;padding-top:4px;border-top:0.5px solid var(--border)">
+        <span style="color:var(--text-muted)">Vendas: ${fmt(rec)}</span>
+        <span style="color:${marg>=30?'var(--green)':marg>=10?'var(--amber)':'var(--red)'}">Margem: ${pct(marg)}</span>
+      </div>`:''}
+    </div>`;
+  }).join('') : '<div class="empty"><i class="ti ti-package" aria-hidden="true"></i>Nenhum produto cadastrado</div>';
+}
+
+/* ===== RELATÓRIO ===== */
+let relTab = 'financeiro';
+function setRelTab(t, btn) {
+  relTab = t;
+  document.querySelectorAll('#pane-relatorio .sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['rel-financeiro','rel-produtos','rel-clientes'].forEach(id=>{
+    document.getElementById(id).style.display = id==='rel-'+t ? 'block' : 'none';
+  });
+  renderRelatorio();
+}
+
+function renderRelatorio() {
+  const est     = calcEstoque();
+  const receita = DB.vendas.reduce((a,v)=>a+v.total,0);
+  const custo   = DB.vendas.reduce((a,v)=>a+v.custoTotal,0);
+  const lucro   = receita - custo;
+  const margem  = receita>0?(lucro/receita*100):0;
+  const compras = DB.movs.filter(m=>m.tipo==='entrada').reduce((a,m)=>a+m.qtd*m.custo,0);
+  const estVal  = DB.produtos.reduce((a,p)=>{const e=est[p.id];return a+Math.max(0,e?e.qtd:0)*(e?e.custoMedio:0);},0);
+
+  if(relTab==='financeiro') {
+    const porPgto = {};
+    DB.vendas.forEach(v=>{ const k=v.pgto||'—'; porPgto[k]=(porPgto[k]||0)+v.total; });
+    document.getElementById('rel-financeiro').innerHTML = `
+      <div class="card">
+        <p class="card-title"><i class="ti ti-report-money" aria-hidden="true"></i>Resumo financeiro</p>
+        <div class="detail-row"><span class="detail-lbl">Receita total de vendas</span><span class="g detail-val">${fmt(receita)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Custo dos produtos vendidos</span><span class="r detail-val">${fmt(custo)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Lucro bruto</span><span class="detail-val ${lucro>=0?'g':'r'}" style="font-size:15px">${fmt(lucro)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Margem bruta</span><span class="detail-val ${margem>=30?'g':margem>=10?'o':'r'}">${pct(margem)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Total investido em compras</span><span class="r detail-val">${fmt(compras)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Valor atual em estoque</span><span class="b detail-val">${fmt(estVal)}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Número de vendas</span><span class="b detail-val">${DB.vendas.length}</span></div>
+        <div class="detail-row"><span class="detail-lbl">Ticket médio</span><span class="b detail-val">${fmt(DB.vendas.length?receita/DB.vendas.length:0)}</span></div>
+      </div>
+      ${Object.keys(porPgto).length?`<div class="card"><p class="card-title"><i class="ti ti-credit-card" aria-hidden="true"></i>Por forma de pagamento</p>${Object.entries(porPgto).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="detail-row"><span class="detail-lbl">${esc(k)}</span><span class="g detail-val">${fmt(v)}</span></div>`).join('')}</div>`:''}`;
+  }
+
+  if(relTab==='produtos') {
+    const topProd = DB.produtos.map(p=>{
+      const itens = DB.vendas.flatMap(v=>v.itens||[]).filter(i=>i.prodId===p.id);
+      const rec   = itens.reduce((a,i)=>a+i.total,0);
+      const luc   = itens.reduce((a,i)=>a+i.lucro,0);
+      const q     = itens.reduce((a,i)=>a+i.qtd,0);
+      const marg  = rec>0?luc/rec*100:0;
+      return {nome:p.nome, cat:p.cat, rec, luc, q, marg};
+    }).filter(x=>x.rec>0).sort((a,b)=>b.luc-a.luc);
+
+    document.getElementById('rel-produtos').innerHTML = `
+      <div class="card">
+        <p class="card-title"><i class="ti ti-award" aria-hidden="true"></i>Rentabilidade por produto</p>
+        ${topProd.length?topProd.map(p=>`
+          <div class="detail-row" style="align-items:flex-start">
+            <div><div style="font-size:13px;font-weight:600">${esc(p.nome)}</div><div style="font-size:11px;color:var(--text-muted)">${esc(p.cat)} · ${p.q} un vendidas</div></div>
+            <div style="text-align:right">
+              <div class="detail-val ${p.luc>=0?'g':'r'}">${fmt(p.luc)}</div>
+              <div style="font-size:11px;color:${p.marg>=30?'var(--green)':p.marg>=10?'var(--amber)':'var(--red)'}">Margem ${pct(p.marg)}</div>
+            </div>
+          </div>`).join(''):'<div class="empty">Nenhum produto vendido ainda</div>'}
+      </div>`;
+  }
+
+  if(relTab==='clientes') {
+    const topCli = DB.clientes.map(c=>{
+      const vs = DB.vendas.filter(v=>v.clienteId===c.id);
+      return { nome:c.nome, vei:c.vei, rec:vs.reduce((a,v)=>a+v.total,0), luc:vs.reduce((a,v)=>a+v.lucroTotal,0), n:vs.length };
+    }).filter(c=>c.n>0).sort((a,b)=>b.rec-a.rec);
+
+    document.getElementById('rel-clientes').innerHTML = `
+      <div class="card">
+        <p class="card-title"><i class="ti ti-crown" aria-hidden="true"></i>Melhores clientes</p>
+        ${topCli.length?topCli.map(c=>`
+          <div class="detail-row" style="align-items:flex-start">
+            <div><div style="font-size:13px;font-weight:600">${esc(c.nome)}</div><div style="font-size:11px;color:var(--text-muted)">${c.vei?esc(c.vei)+' · ':''}${c.n} venda(s)</div></div>
+            <div style="text-align:right">
+              <div class="g detail-val">${fmt(c.rec)}</div>
+              <div style="font-size:11px;color:var(--text-muted)">Lucro: ${fmt(c.luc)}</div>
+            </div>
+          </div>`).join(''):'<div class="empty">Nenhuma venda com cliente vinculado</div>'}
+      </div>`;
+  }
+}
+
+/* ===== SERVICE WORKER ===== */
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+/* ===== INIT ===== */
+renderPainel();
+</script>
+</body>
+</html>
