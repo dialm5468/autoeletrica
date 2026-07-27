@@ -238,9 +238,14 @@ textarea{resize:none;height:60px;line-height:1.5}
       <div class="sb-sec">Veículos</div>
       <button class="sb-btn" onclick="nav('deslocamento',this)"><i class="ti ti-car"></i>Deslocamento</button>
       <button class="sb-btn" onclick="nav('abastecimento',this)"><i class="ti ti-gas-station"></i>Abastecimento</button>
+      <div class="sb-sec">Operações</div>
+      <button class="sb-btn" onclick="nav('os',this)"><i class="ti ti-clipboard-list"></i>Ordens de Serviço</button>
+      <button class="sb-btn" onclick="nav('caixa',this)"><i class="ti ti-cash"></i>Caixa</button>
+      <button class="sb-btn" onclick="nav('contas',this)"><i class="ti ti-credit-card"></i>Contas</button>
       <div class="sb-sec">Gestão</div>
       <button class="sb-btn" onclick="nav('relatorio',this)"><i class="ti ti-chart-bar"></i>Relatório</button>
       <button class="sb-btn" id="navUsu" style="display:none" onclick="nav('usuarios',this)"><i class="ti ti-shield-lock"></i>Usuários</button>
+          <button class="sb-btn" id="navAudit" style="display:none" onclick="nav('auditoria',this)"><i class="ti ti-list-search"></i>Auditoria</button>
     </div>
     <div class="sb-user">
       <div class="sb-av" id="sbAv">A</div>
@@ -291,6 +296,7 @@ const db = getFirestore(fbApp);
 const CACHE = {
   usuarios: [], categorias: ['Alternador','Motor de Partida','Bateria','Sensor','Relé/Fusível','Chicote/Cabo','Módulo/Central','Farol/Lâmpada','Correia/Tensor','Outros'],
   veiculos: [], clientes: [], produtos: [], entradas: [], vendas: [], deslocamentos: [], abastecimentos: [],
+  os: [], caixa: [], contas: [],
   config: { masterPass: 'mestre2024' }
 };
 
@@ -326,16 +332,30 @@ function setSyncStatus(online){
 }
 
 // ── FIRESTORE HELPERS ──
-async function fsAdd(col, data){ return await addDoc(collection(db, col), {...data, _ts: Date.now()}) }
+async function fsAdd(col, data){
+  const ref = await addDoc(collection(db, col), {...data, _ts: Date.now()});
+  await logAction('CRIOU', col, ref.id, data.nome||data.produto||data.veiculo||data.servico||'');
+  return ref;
+}
 async function fsSet(col, id, data){ return await setDoc(doc(db, col, id), {...data, _ts: Date.now()}) }
-async function fsUpdate(col, id, data){ return await updateDoc(doc(db, col, id), {...data, _ts: Date.now()}) }
-async function fsDel(col, id){ return await deleteDoc(doc(db, col, id)) }
+async function fsUpdate(col, id, data){
+  const res = await updateDoc(doc(db, col, id), {...data, _ts: Date.now()});
+  await logAction('EDITOU', col, id, data.nome||data.produto||data.veiculo||data.servico||'');
+  return res;
+}
+async function fsDel(col, id){
+  const snap = await getDocs(query(collection(db, col)));
+  const docData = snap.docs.find(d=>d.id===id)?.data()||{};
+  const res = await deleteDoc(doc(db, col, id));
+  await logAction('EXCLUIU', col, id, docData.nome||docData.produto||docData.veiculo||docData.servico||'');
+  return res;
+}
 
 function snapToArr(snapshot){return snapshot.docs.map(d=>({id:d.id,...d.data()}))}
 
 // ── LISTENERS TEMPO REAL ──
 function startListeners(){
-  const cols = ['clientes','produtos','entradas','vendas','deslocamentos','abastecimentos','usuarios','config_col'];
+  const cols = ['clientes','produtos','entradas','vendas','deslocamentos','abastecimentos','usuarios','config_col','os','caixa','contas'];
   unsubscribers.forEach(u=>u());
   unsubscribers=[];
   cols.forEach(col=>{
@@ -348,7 +368,7 @@ function startListeners(){
       }
       setSyncStatus(true);
       // re-render current page
-      const R = {painel:rPainel,clientes:rClientes,produtos:rProdutos,entradas:rEntradas,vendas:rVendas,estoque:rEstoque,deslocamento:rDesl,abastecimento:rAbs,relatorio:rRel,usuarios:rUsu};
+      const R = {painel:rPainel,clientes:rClientes,produtos:rProdutos,entradas:rEntradas,vendas:rVendas,estoque:rEstoque,deslocamento:rDesl,abastecimento:rAbs,os:rOS,caixa:rCaixa,contas:rContas,relatorio:rRel,usuarios:rUsu,auditoria:rAudit};
       if(R[currentPage]) R[currentPage]();
     }, err=>{ setSyncStatus(false); });
     unsubscribers.push(unsub);
@@ -387,6 +407,7 @@ window.doLogin = function(){
   document.getElementById('sbNm').textContent=user.nome;
   document.getElementById('sbRl').textContent=user.role==='admin'?'Administrador':'Funcionário';
   document.getElementById('navUsu').style.display=user.role==='admin'?'flex':'none';
+  document.getElementById('navAudit').style.display=user.role==='admin'?'flex':'none';
   startListeners();
   nav('painel',document.querySelector('.sb-btn'));
 }
@@ -400,7 +421,7 @@ window.doLogout = function(){
 }
 
 // ── NAVEGAÇÃO ──
-const TITLES={painel:['Painel','Visão geral em tempo real'],clientes:['Clientes','Cadastro e histórico'],produtos:['Produtos','Peças e produtos'],entradas:['Entradas','Compras e recebimentos'],vendas:['Vendas','Registro de vendas'],estoque:['Estoque','Posição atual'],deslocamento:['Deslocamento','Controle de saídas'],abastecimento:['Abastecimento','Combustível'],relatorio:['Relatório','Indicadores financeiros'],usuarios:['Usuários','Controle de acesso']};
+const TITLES={painel:['Painel','Visão geral em tempo real'],clientes:['Clientes','Cadastro e histórico'],produtos:['Produtos','Peças e produtos'],entradas:['Entradas','Compras e recebimentos'],vendas:['Vendas','Registro de vendas'],estoque:['Estoque','Posição atual'],deslocamento:['Deslocamento','Controle de saídas'],abastecimento:['Abastecimento','Combustível'],os:['Ordens de Serviço','Controle de OS em tempo real'],caixa:['Caixa','Movimento do caixa da loja'],contas:['Contas','Receber e pagar'],relatorio:['Relatório','Indicadores financeiros'],usuarios:['Usuários','Controle de acesso'],auditoria:['Auditoria','Histórico de ações dos usuários']};
 
 window.nav = function(page,btn){
   document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
@@ -660,34 +681,272 @@ function rAbs(){
 
 // ── RELATÓRIO ──
 function rRel(){
-  const receita=CACHE.vendas.reduce((a,v)=>a+(parseFloat(v.total)||0),0);
-  const custo=CACHE.vendas.reduce((a,v)=>a+(parseFloat(v.custoTotal)||0),0);
-  const lucro=receita-custo,margem=receita>0?lucro/receita*100:0;
-  const compras=CACHE.entradas.reduce((a,e)=>a+(parseFloat(e.qtd)||0)*(parseFloat(e.custo)||0),0);
-  const gastoAbs=CACHE.abastecimentos.reduce((a,x)=>a+(parseFloat(x.valor)||0),0);
-  const totKm=CACHE.deslocamentos.reduce((a,d)=>a+(parseFloat(d.km)||0),0);
-  const topProd=CACHE.produtos.map(p=>{const its=CACHE.vendas.flatMap(v=>v.itens||[]).filter(i=>i.prodId===p.id);const rec=its.reduce((a,i)=>a+(i.total||0),0);const luc=its.reduce((a,i)=>a+(i.lucro||0),0);return{...p,rec,luc,qtdV:its.reduce((a,i)=>a+(i.qtd||0),0),marg:rec>0?luc/rec*100:0}}).filter(p=>p.rec>0).sort((a,b)=>b.luc-a.luc).slice(0,5);
-  const topCli=CACHE.clientes.map(c=>{const vs=CACHE.vendas.filter(v=>v.clienteId===c.id);return{...c,nv:vs.length,tv:vs.reduce((a,v)=>a+(parseFloat(v.total)||0),0)}}).filter(c=>c.nv>0).sort((a,b)=>b.tv-a.tv).slice(0,5);
-  document.getElementById('content').innerHTML=`
-  <div class="stats">
-    <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-trending-up"></i></div><div class="stat-l">Receita</div><div class="stat-v g">${fmt(receita)}</div></div>
-    <div class="stat"><div class="stat-ic" style="background:#dbeafe;color:#2563eb"><i class="ti ti-chart-pie"></i></div><div class="stat-l">Lucro</div><div class="stat-v ${lucro>=0?'g':'r'}">${fmt(lucro)}</div></div>
-    <div class="stat"><div class="stat-ic" style="background:#f0fdf4;color:#16a34a"><i class="ti ti-percent"></i></div><div class="stat-l">Margem</div><div class="stat-v ${margem>=30?'g':margem>=10?'o':'r'}">${margem.toFixed(1)}%</div></div>
-    <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-receipt"></i></div><div class="stat-l">Ticket médio</div><div class="stat-v o">${fmt(CACHE.vendas.length?receita/CACHE.vendas.length:0)}</div></div>
+  // ── DADOS BASE ──
+  const est = calcEst();
+  const vendas = CACHE.vendas;
+  const entradas = CACHE.entradas;
+  const receita = vendas.reduce((a,v)=>a+(parseFloat(v.total)||0),0);
+  const custo   = vendas.reduce((a,v)=>a+(parseFloat(v.custoTotal)||0),0);
+  const lucro   = receita - custo;
+  const margem  = receita>0 ? lucro/receita*100 : 0;
+  const compras = entradas.reduce((a,e)=>a+(parseFloat(e.qtd)||0)*(parseFloat(e.custo)||0),0);
+  const gastoAbs= CACHE.abastecimentos.reduce((a,x)=>a+(parseFloat(x.valor)||0),0);
+  const totKm   = CACHE.deslocamentos.reduce((a,d)=>a+(parseFloat(d.km)||0),0);
+  const recCaixa= (CACHE.caixa||[]).filter(m=>m.tipo==='entrada').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  const saiCaixa= (CACHE.caixa||[]).filter(m=>m.tipo==='saida').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  const saldoCx = recCaixa - saiCaixa;
+  const aReceber= (CACHE.contas||[]).filter(c=>c.tipo==='receber'&&c.status==='pendente').reduce((a,c)=>a+(parseFloat(c.valor)||0),0);
+  const aPagar  = (CACHE.contas||[]).filter(c=>c.tipo==='pagar'&&c.status==='pendente').reduce((a,c)=>a+(parseFloat(c.valor)||0),0);
+  const osAbertas=(CACHE.os||[]).filter(o=>o.status==='Aberta').length;
+  const osConcl =(CACHE.os||[]).filter(o=>o.status==='Concluída').length;
+  const ticket  = vendas.length>0 ? receita/vendas.length : 0;
+  const custoKm = totKm>0 ? gastoAbs/totKm : 0;
+
+  // ── TOP PRODUTOS ──
+  const topProd = CACHE.produtos.map(p=>{
+    const its=vendas.flatMap(v=>v.itens||[]).filter(i=>i.prodId===p.id);
+    const rec=its.reduce((a,i)=>a+(i.total||0),0);
+    const luc=its.reduce((a,i)=>a+(i.lucro||0),0);
+    const qtdV=its.reduce((a,i)=>a+(i.qtd||0),0);
+    return{...p,rec,luc,qtdV,marg:rec>0?luc/rec*100:0};
+  }).filter(p=>p.rec>0).sort((a,b)=>b.luc-a.luc);
+
+  // ── TOP CLIENTES ──
+  const topCli = CACHE.clientes.map(cl=>{
+    const vs=vendas.filter(v=>v.clienteId===cl.id);
+    const tv=vs.reduce((a,v)=>a+(parseFloat(v.total)||0),0);
+    return{...cl,nv:vs.length,tv};
+  }).filter(c=>c.nv>0).sort((a,b)=>b.tv-a.tv);
+
+  // ── PAGAMENTOS ──
+  const pgtoMap={};
+  vendas.forEach(v=>{const k=v.pgto||'Outros';pgtoMap[k]=(pgtoMap[k]||0)+(parseFloat(v.total)||0)});
+  const pgtoArr=Object.entries(pgtoMap).sort((a,b)=>b[1]-a[1]);
+  const maxPgto=pgtoArr[0]?pgtoArr[0][1]:1;
+
+  // ── ESTOQUE CRÍTICO ──
+  const prodCrit=CACHE.produtos.filter(p=>{
+    const e=est[p.id]; const q=e?Math.max(0,e.qtd):0; const min=parseInt(p.min)||0;
+    return min>0&&q<=min;
+  });
+  const estVal=CACHE.produtos.reduce((a,p)=>{const e=est[p.id];return a+Math.max(0,e?e.qtd:0)*(e?e.cm:0)},0);
+
+  // ── SERVIÇOS OS ──
+  const servicoMap={};
+  (CACHE.os||[]).forEach(o=>{if(o.servicos){o.servicos.split('\n').forEach(s=>{const k=s.trim();if(k)servicoMap[k]=(servicoMap[k]||0)+1})}});
+  const topServ=Object.entries(servicoMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // ── SUGESTÕES INTELIGENTES ──
+  const sugestoes=[];
+  if(margem<25&&receita>0) sugestoes.push({icon:'ti-alert-triangle',cor:'#d97706',bg:'#fef3c7',txt:`Margem de ${margem.toFixed(1)}% está abaixo do ideal (recomendado: 30%+). Revise os preços de venda ou reduza custos de compra.`});
+  if(prodCrit.length>0) sugestoes.push({icon:'ti-package',cor:'#dc2626',bg:'#fee2e2',txt:`${prodCrit.length} produto(s) com estoque crítico ou zerado. Faça reposição para não perder vendas: ${prodCrit.slice(0,3).map(p=>p.nome).join(', ')}.`});
+  if(aReceber>500) sugestoes.push({icon:'ti-cash',cor:'#2563eb',bg:'#dbeafe',txt:`Você tem ${fmt(aReceber)} a receber. Priorize a cobrança de clientes em aberto para melhorar o fluxo de caixa.`});
+  if(aPagar>0) sugestoes.push({icon:'ti-credit-card',cor:'#dc2626',bg:'#fee2e2',txt:`${fmt(aPagar)} a pagar em aberto. Verifique os vencimentos para evitar juros.`});
+  if(osAbertas>3) sugestoes.push({icon:'ti-clipboard-list',cor:'#d97706',bg:'#fef3c7',txt:`${osAbertas} ordens de serviço abertas. Monitore o andamento para evitar atraso na entrega.`});
+  if(topProd.length>0&&topProd[0].marg<15) sugestoes.push({icon:'ti-trending-down',cor:'#dc2626',bg:'#fee2e2',txt:`O produto mais vendido "${topProd[0].nome}" tem margem baixa (${topProd[0].marg.toFixed(1)}%). Considere aumentar o preço.`});
+  if(gastoAbs>0&&custoKm>1) sugestoes.push({icon:'ti-gas-station',cor:'#d97706',bg:'#fef3c7',txt:`Custo por KM rodado: ${fmt(custoKm)}/km. Avalie otimizar rotas de deslocamento.`});
+  if(ticket>0&&ticket<200) sugestoes.push({icon:'ti-shopping-cart',cor:'#2563eb',bg:'#dbeafe',txt:`Ticket médio de ${fmt(ticket)}. Ofereça serviços complementares no momento da venda para aumentar esse valor.`});
+  if(sugestoes.length===0) sugestoes.push({icon:'ti-circle-check',cor:'#16a34a',bg:'#dcfce7',txt:'Parabéns! Todos os indicadores estão saudáveis. Continue monitorando o sistema regularmente.'});
+
+  // ── RENDER ──
+  const aba = (id, label, active=false) =>
+    `<button class="rel-tab ${active?'rel-tab-active':''}" onclick="relAba('${id}',this)">${label}</button>`;
+
+  document.getElementById('content').innerHTML = `
+  <div class="pg-title"><div><h2>Relatório</h2><small>Análise completa do negócio</small></div></div>
+
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="relTabs">
+    ${aba('geral','📊 Geral',true)}
+    ${aba('financeiro','💰 Financeiro')}
+    ${aba('produtos','📦 Produtos')}
+    ${aba('clientes','👤 Clientes')}
+    ${aba('operacional','🔧 Operacional')}
+    ${aba('sugestoes','💡 Sugestões')}
   </div>
-  <div class="panel"><div class="pt" style="margin-bottom:12px"><i class="ti ti-report-money"></i>Resumo financeiro</div>
-    <div class="detail-row"><span class="dr-l">Receita total</span><span class="dr-v g">${fmt(receita)}</span></div>
-    <div class="detail-row"><span class="dr-l">Custo dos produtos vendidos</span><span class="dr-v r">${fmt(custo)}</span></div>
-    <div class="detail-row"><span class="dr-l">Lucro bruto</span><span class="dr-v ${lucro>=0?'g':'r'}">${fmt(lucro)}</span></div>
-    <div class="detail-row"><span class="dr-l">Total investido em compras</span><span class="dr-v r">${fmt(compras)}</span></div>
-    <div class="detail-row"><span class="dr-l">Gasto com combustível</span><span class="dr-v r">${fmt(gastoAbs)}</span></div>
-    <div class="detail-row"><span class="dr-l">Vendas realizadas</span><span class="dr-v b">${CACHE.vendas.length}</span></div>
-    <div class="detail-row"><span class="dr-l">KM total rodado</span><span class="dr-v b">${totKm.toFixed(0)} km</span></div>
-  </div>
-  ${topProd.length?`<div class="panel"><div class="pt" style="margin-bottom:11px"><i class="ti ti-award"></i>Produtos mais rentáveis</div><div class="list">${topProd.map(p=>`<div class="ri"><div class="av av-a"><i class="ti ti-bolt"></i></div><div class="ii"><div class="in">${esc(p.nome)}</div><div class="id">${p.qtdV} un · margem ${p.marg.toFixed(1)}%</div></div><div class="iv ${p.luc>=0?'g':'r'}">${fmt(p.luc)}</div></div>`).join('')}</div></div>`:''}
-  ${topCli.length?`<div class="panel"><div class="pt" style="margin-bottom:11px"><i class="ti ti-crown"></i>Melhores clientes</div><div class="list">${topCli.map(c=>`<div class="ri"><div class="av av-p">${ini(c.nome)}</div><div class="ii"><div class="in">${esc(c.nome)}</div><div class="id">${c.nv} venda(s)</div></div><div class="iv g">${fmt(c.tv)}</div></div>`).join('')}</div></div>`:''}
-  `
+
+  <div id="relContent">
+    <!-- ABA GERAL -->
+    <div id="rel-geral">
+      <div class="stats">
+        <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-trending-up"></i></div><div class="stat-l">Receita total</div><div class="stat-v g">${fmt(receita)}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#dbeafe;color:#2563eb"><i class="ti ti-chart-pie"></i></div><div class="stat-l">Lucro bruto</div><div class="stat-v ${lucro>=0?'g':'r'}">${fmt(lucro)}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#f0fdf4;color:#16a34a"><i class="ti ti-percent"></i></div><div class="stat-l">Margem bruta</div><div class="stat-v ${margem>=30?'g':margem>=10?'o':'r'}">${margem.toFixed(1)}%</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-receipt"></i></div><div class="stat-l">Ticket médio</div><div class="stat-v o">${fmt(ticket)}</div></div>
+      </div>
+      <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat"><div class="stat-ic" style="background:#ccfbf1;color:#0d9488"><i class="ti ti-wallet"></i></div><div class="stat-l">Saldo caixa</div><div class="stat-v ${saldoCx>=0?'g':'r'}">${fmt(saldoCx)}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-arrow-down-circle"></i></div><div class="stat-l">A receber</div><div class="stat-v g">${fmt(aReceber)}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#fee2e2;color:#dc2626"><i class="ti ti-arrow-up-circle"></i></div><div class="stat-l">A pagar</div><div class="stat-v r">${fmt(aPagar)}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-clipboard-list"></i></div><div class="stat-l">OS abertas</div><div class="stat-v o">${osAbertas}</div></div>
+      </div>
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-chart-bar"></i>Resumo executivo</div>
+        <div class="detail-row"><span class="dr-l">Receita de vendas</span><span class="dr-v g">${fmt(receita)}</span></div>
+        <div class="detail-row"><span class="dr-l">(-) Custo dos produtos</span><span class="dr-v r">${fmt(custo)}</span></div>
+        <div class="detail-row"><span class="dr-l">= Lucro bruto</span><span class="dr-v ${lucro>=0?'g':'r'}">${fmt(lucro)}</span></div>
+        <div class="detail-row"><span class="dr-l">(-) Compras de estoque</span><span class="dr-v r">${fmt(compras)}</span></div>
+        <div class="detail-row"><span class="dr-l">(-) Combustível</span><span class="dr-v r">${fmt(gastoAbs)}</span></div>
+        <div class="detail-row"><span class="dr-l">(-) Contas a pagar</span><span class="dr-v r">${fmt(aPagar)}</span></div>
+        <div class="detail-row"><span class="dr-l">Número de vendas</span><span class="dr-v b">${vendas.length}</span></div>
+        <div class="detail-row"><span class="dr-l">Valor em estoque</span><span class="dr-v b">${fmt(estVal)}</span></div>
+        <div class="detail-row"><span class="dr-l">OS concluídas</span><span class="dr-v g">${osConcl}</span></div>
+        <div class="detail-row"><span class="dr-l">KM total rodado</span><span class="dr-v b">${totKm.toFixed(0)} km</span></div>
+      </div>
+    </div>
+
+    <!-- ABA FINANCEIRO (hidden) -->
+    <div id="rel-financeiro" style="display:none">
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-cash"></i>Fluxo de caixa</div>
+        <div class="detail-row"><span class="dr-l">Total entradas no caixa</span><span class="dr-v g">${fmt(recCaixa)}</span></div>
+        <div class="detail-row"><span class="dr-l">Total saídas do caixa</span><span class="dr-v r">${fmt(saiCaixa)}</span></div>
+        <div class="detail-row"><span class="dr-l">Saldo atual</span><span class="dr-v ${saldoCx>=0?'g':'r'}">${fmt(saldoCx)}</span></div>
+        <div class="detail-row"><span class="dr-l">A receber (pendente)</span><span class="dr-v g">${fmt(aReceber)}</span></div>
+        <div class="detail-row"><span class="dr-l">A pagar (pendente)</span><span class="dr-v r">${fmt(aPagar)}</span></div>
+        <div class="detail-row"><span class="dr-l">Resultado líquido projetado</span><span class="dr-v ${saldoCx+aReceber-aPagar>=0?'g':'r'}">${fmt(saldoCx+aReceber-aPagar)}</span></div>
+      </div>
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-credit-card"></i>Formas de pagamento</div>
+        ${pgtoArr.length ? pgtoArr.map(([k,v])=>`
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="font-weight:600">${esc(k)}</span>
+            <span style="font-weight:700;color:var(--green)">${fmt(v)} <span style="color:var(--textm);font-weight:400">(${receita>0?(v/receita*100).toFixed(1):0}%)</span></span>
+          </div>
+          <div class="prog-bg"><div class="prog-fill" style="width:${(v/maxPgto*100).toFixed(0)}%;background:var(--accent)"></div></div>
+        </div>`).join('') : '<div class="empty">Nenhuma venda registrada</div>'}
+      </div>
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-gas-station"></i>Custos operacionais de veículos</div>
+        <div class="detail-row"><span class="dr-l">Total combustível</span><span class="dr-v r">${fmt(gastoAbs)}</span></div>
+        <div class="detail-row"><span class="dr-l">KM rodado</span><span class="dr-v b">${totKm.toFixed(0)} km</span></div>
+        <div class="detail-row"><span class="dr-l">Custo por KM</span><span class="dr-v o">${fmt(custoKm)}/km</span></div>
+        <div class="detail-row"><span class="dr-l">Abastecimentos</span><span class="dr-v b">${CACHE.abastecimentos.length}</span></div>
+      </div>
+    </div>
+
+    <!-- ABA PRODUTOS (hidden) -->
+    <div id="rel-produtos" style="display:none">
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-award"></i>Ranking de produtos por lucro</div>
+        ${topProd.length ? topProd.map((p,i)=>`
+        <div class="ri" style="margin-bottom:6px;border-left:3px solid ${p.marg>=30?'var(--green)':p.marg>=15?'var(--amber)':'var(--red)'}">
+          <div class="av av-a" style="font-size:11px;font-weight:800">#${i+1}</div>
+          <div class="ii">
+            <div class="in">${esc(p.nome)}</div>
+            <div class="id">${p.qtdV} un vendidas · margem ${p.marg.toFixed(1)}% · receita ${fmt(p.rec)}</div>
+            <div class="prog-bg" style="margin-top:4px"><div class="prog-fill" style="width:${topProd[0].rec>0?(p.rec/topProd[0].rec*100).toFixed(0):0}%;background:${p.marg>=30?'var(--green)':p.marg>=15?'var(--amber)':'var(--red)'}"></div></div>
+          </div>
+          <div class="iv ${p.luc>=0?'g':'r'}">${fmt(p.luc)}</div>
+        </div>`).join('') : '<div class="empty"><i class="ti ti-package"></i>Nenhuma venda de produto registrada</div>'}
+      </div>
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i>Produtos com baixo giro ou críticos</div>
+        ${prodCrit.length ? prodCrit.map(p=>{const e=est[p.id];const q=e?Math.max(0,e.qtd):0;return`
+        <div class="ri" style="margin-bottom:5px;border-left:3px solid ${q<=0?'var(--red)':'var(--amber)'}">
+          <div class="ii"><div class="in">${esc(p.nome)}</div>
+          <div class="id">${esc(p.cat||'')} · ${q<=0?'ZERADO':'Restam '+q+' un'} · mínimo: ${p.min||0}</div></div>
+          <span class="tag ${q<=0?'tag-zero':'tag-crit'}">${q<=0?'Zerado':'Crítico'}</span>
+        </div>`}).join('') : '<div class="empty" style="padding:14px"><i class="ti ti-circle-check" style="color:var(--green)"></i>Estoque saudável!</div>'}
+      </div>
+    </div>
+
+    <!-- ABA CLIENTES (hidden) -->
+    <div id="rel-clientes" style="display:none">
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat"><div class="stat-ic" style="background:#ede9fe;color:#7c3aed"><i class="ti ti-users"></i></div><div class="stat-l">Total clientes</div><div class="stat-v b">${CACHE.clientes.length}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-user-check"></i></div><div class="stat-l">Clientes ativos</div><div class="stat-v g">${topCli.length}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-crown"></i></div><div class="stat-l">Ticket médio</div><div class="stat-v o">${fmt(ticket)}</div></div>
+      </div>
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-crown"></i>Melhores clientes por receita</div>
+        ${topCli.length ? topCli.map((cl,i)=>{
+          const txM=cl.nv>0?cl.tv/cl.nv:0;
+          return`<div class="ri" style="margin-bottom:6px">
+            <div class="av av-p" style="font-size:11px;font-weight:800">#${i+1}</div>
+            <div class="ii">
+              <div class="in">${esc(cl.nome)}</div>
+              <div class="id">${cl.nv} visita(s) · ticket médio ${fmt(txM)}</div>
+              <div class="prog-bg" style="margin-top:4px"><div class="prog-fill" style="width:${topCli[0].tv>0?(cl.tv/topCli[0].tv*100).toFixed(0):0}%;background:var(--purple)"></div></div>
+            </div>
+            <div class="iv g">${fmt(cl.tv)}</div>
+          </div>`;
+        }).join('') : '<div class="empty"><i class="ti ti-users"></i>Nenhuma venda com cliente vinculado</div>'}
+      </div>
+    </div>
+
+    <!-- ABA OPERACIONAL (hidden) -->
+    <div id="rel-operacional" style="display:none">
+      <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-clock"></i></div><div class="stat-l">OS abertas</div><div class="stat-v o">${osAbertas}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-circle-check"></i></div><div class="stat-l">OS concluídas</div><div class="stat-v g">${osConcl}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#ccfbf1;color:#0d9488"><i class="ti ti-car"></i></div><div class="stat-l">Deslocamentos</div><div class="stat-v b">${CACHE.deslocamentos.length}</div></div>
+        <div class="stat"><div class="stat-ic" style="background:#dbeafe;color:#2563eb"><i class="ti ti-road"></i></div><div class="stat-l">KM rodado</div><div class="stat-v ac">${totKm.toFixed(0)}</div></div>
+      </div>
+      ${topServ.length ? `<div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-tool"></i>Serviços mais executados (via OS)</div>
+        ${topServ.map(([s,n])=>`
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="font-weight:600">${esc(s)}</span><span style="color:var(--accent);font-weight:700">${n}x</span>
+          </div>
+          <div class="prog-bg"><div class="prog-fill" style="width:${(n/topServ[0][1]*100).toFixed(0)}%;background:var(--accent)"></div></div>
+        </div>`).join('')}
+      </div>` : ''}
+      <div class="panel">
+        <div class="pt" style="margin-bottom:12px"><i class="ti ti-gas-station"></i>Controle de veículos</div>
+        <div class="detail-row"><span class="dr-l">Total KM rodado</span><span class="dr-v b">${totKm.toFixed(0)} km</span></div>
+        <div class="detail-row"><span class="dr-l">Total abastecimentos</span><span class="dr-v b">${CACHE.abastecimentos.length}</span></div>
+        <div class="detail-row"><span class="dr-l">Total litros</span><span class="dr-v ac">${CACHE.abastecimentos.reduce((a,x)=>a+(parseFloat(x.litros)||0),0).toFixed(2)} L</span></div>
+        <div class="detail-row"><span class="dr-l">Gasto total combustível</span><span class="dr-v r">${fmt(gastoAbs)}</span></div>
+        <div class="detail-row"><span class="dr-l">Custo médio por KM</span><span class="dr-v o">${fmt(custoKm)}/km</span></div>
+      </div>
+    </div>
+
+    <!-- ABA SUGESTÕES (hidden) -->
+    <div id="rel-sugestoes" style="display:none">
+      <div class="panel" style="margin-bottom:14px;background:var(--navy2);color:white;border-color:var(--navy2)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <i class="ti ti-bulb" style="font-size:22px;color:#fbbf24"></i>
+          <div>
+            <div style="font-size:14px;font-weight:700">Análise inteligente do sistema</div>
+            <div style="font-size:11px;opacity:.65">Sugestões baseadas nos seus dados reais</div>
+          </div>
+        </div>
+      </div>
+      ${sugestoes.map((s,i)=>`
+      <div class="panel" style="border-left:4px solid ${s.cor};background:${s.bg}20;margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;gap:11px">
+          <div style="width:36px;height:36px;background:${s.bg};border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ${s.icon}" style="font-size:18px;color:${s.cor}"></i>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:${s.cor};margin-bottom:4px">Sugestão ${i+1}</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.6">${s.txt}</div>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  // Estilo das abas
+  if(!document.getElementById('relStyle')){
+    const st=document.createElement('style');
+    st.id='relStyle';
+    st.textContent=`.rel-tab{padding:7px 14px;border-radius:20px;border:1.5px solid var(--borderc);background:transparent;font-size:12px;font-weight:600;color:var(--texts);cursor:pointer;transition:all .15s;font-family:inherit}.rel-tab-active{background:var(--navy2);color:white;border-color:var(--navy2)}.rel-tab:hover:not(.rel-tab-active){border-color:var(--accent);color:var(--accent)}`;
+    document.head.appendChild(st);
+  }
 }
+
+window.relAba = function(aba, btn){
+  ['geral','financeiro','produtos','clientes','operacional','sugestoes'].forEach(id=>{
+    const el=document.getElementById('rel-'+id);
+    if(el) el.style.display = id===aba ? 'block' : 'none';
+  });
+  document.querySelectorAll('.rel-tab').forEach(b=>b.classList.remove('rel-tab-active'));
+  if(btn) btn.classList.add('rel-tab-active');
+}
+
 
 // ── USUÁRIOS ──
 window.modalUsu = async function(id=null){
@@ -734,7 +993,308 @@ function rUsu(){
   <p style="font-size:12px;color:var(--texts);line-height:1.7">Necessária para criar novos usuários. Padrão inicial: <b>mestre2024</b>. Somente admins acessam esta tela.</p></div>`
 }
 
-window.closeModal = closeModal;
+// ── LOG DE AUDITORIA ──
+async function logAction(acao, colecao, docId, descricao){
+  try {
+    const nomeColecao = {
+      clientes:'Clientes', produtos:'Produtos', entradas:'Entradas',
+      vendas:'Vendas', deslocamentos:'Deslocamento', abastecimentos:'Abastecimento',
+      usuarios:'Usuários', config_col:'Configurações'
+    }[colecao] || colecao;
+    await addDoc(collection(db, 'auditoria'), {
+      acao,
+      colecao: nomeColecao,
+      docId,
+      descricao: String(descricao||'').slice(0,100),
+      usuario: currentUser?.nome || '—',
+      login: currentUser?.login || '—',
+      data: nowStr(),
+      _ts: Date.now()
+    });
+  } catch(e){ /* silencioso */ }
+}
+
+function rAudit(){
+  document.getElementById('content').innerHTML=`
+  <div class="pg-title"><div><h2>Auditoria</h2><small>Histórico de todas as ações dos usuários</small></div>
+  <button class="btn btn-out" onclick="rAudit()"><i class="ti ti-refresh"></i>Atualizar</button></div>
+  <div id="auditList"><div class="panel"><div class="empty"><div class="spinner" style="margin:0 auto 8px;border-color:var(--border);border-top-color:var(--accent)"></div>Carregando...</div></div></div>`;
+  
+  getDocs(query(collection(db,'auditoria'), orderBy('_ts','desc'))).then(snap=>{
+    const logs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const colCores = {
+      'Clientes':'av-p','Produtos':'av-a','Entradas':'av-g','Vendas':'av-b',
+      'Deslocamento':'av-t','Abastecimento':'av-a','Usuários':'av-p','Configurações':'av-r'
+    };
+    const acaoCor = {'CRIOU':'g','EDITOU':'o','EXCLUIU':'r'};
+    const acaoIcon = {'CRIOU':'ti-circle-plus','EDITOU':'ti-edit','EXCLUIU':'ti-trash'};
+    document.getElementById('auditList').innerHTML = logs.length ? \`
+    <div class="panel">
+      <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <div style="background:var(--gbg);color:var(--green);padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700">
+          <i class="ti ti-circle-plus"></i> Criações: \${logs.filter(l=>l.acao==='CRIOU').length}
+        </div>
+        <div style="background:var(--abg);color:var(--amber);padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700">
+          <i class="ti ti-edit"></i> Edições: \${logs.filter(l=>l.acao==='EDITOU').length}
+        </div>
+        <div style="background:var(--rbg);color:var(--red);padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700">
+          <i class="ti ti-trash"></i> Exclusões: \${logs.filter(l=>l.acao==='EXCLUIU').length}
+        </div>
+      </div>
+      <div class="list">\${logs.map(l=>\`
+        <div class="ri">
+          <div class="av \${colCores[l.colecao]||'av-b'}"><i class="ti \${acaoIcon[l.acao]||'ti-file'}"></i></div>
+          <div class="ii">
+            <div class="in">
+              <span class="\${acaoCor[l.acao]||'b'}" style="font-weight:700">\${esc(l.acao)}</span>
+              em <b>\${esc(l.colecao)}</b>\${l.descricao?' — '+esc(l.descricao):''}
+            </div>
+            <div class="id"><i class="ti ti-user" style="font-size:11px"></i> \${esc(l.usuario)} (@\${esc(l.login)}) · \${esc(l.data)}</div>
+          </div>
+        </div>\`).join('')}
+      </div>
+    </div>\` : '<div class="panel"><div class="empty"><i class="ti ti-list-search"></i>Nenhuma ação registrada ainda</div></div>';
+  }).catch(()=>{
+    document.getElementById('auditList').innerHTML='<div class="panel"><div class="empty"><i class="ti ti-alert-circle"></i>Erro ao carregar. Verifique a conexão.</div></div>';
+  });
+}
+
+
+// ═══════════════════════════════════════
+// ORDEM DE SERVIÇO
+// ═══════════════════════════════════════
+const OS_STATUS = ['Aberta','Em andamento','Concluída','Cancelada'];
+const OS_CORES = {Aberta:'av-ac',Em_andamento:'av-a',Concluída:'av-g',Cancelada:'av-r'};
+const OS_TAGS = {Aberta:'tag-crit',Em_andamento:'tag-crit','Em andamento':'tag-crit',Concluída:'tag-ok',Cancelada:'tag-zero'};
+
+window.modalOS = async function(id=null){
+  const o=id?CACHE.os?.find(x=>x.id===id):null; editId=id;
+  const est=calcEst();
+  openModal(id?'Editar OS':'Nova Ordem de Serviço','clipboard-list',`
+    <div class="r2">
+      <div class="fr"><label class="lbl">Cliente</label>
+        <select id="osCliente"><option value="">Avulso</option>${CACHE.clientes.map(cl=>`<option value="${cl.id}" ${o?.clienteId===cl.id?'selected':''}>${esc(cl.nome)}</option>`).join('')}</select>
+      </div>
+      <div class="fr"><label class="lbl">Veículo / Placa</label><input type="text" id="osVeiculo" value="${esc(o?.veiculo||'')}" placeholder="Ex: Gol 2015 · ABC-1234"/></div>
+      <div class="fr"><label class="lbl">Problema relatado</label><input type="text" id="osProblema" value="${esc(o?.problema||'')}" placeholder="Ex: Alternador sem carga..."/></div>
+      <div class="fr"><label class="lbl">Status</label>
+        <select id="osStatus">${OS_STATUS.map(s=>`<option ${(o?.status||'Aberta')===s?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="fr"><label class="lbl">Serviços a executar</label><textarea id="osServicos" style="height:70px">${esc(o?.servicos||'')}</textarea></div>
+    <div class="r2">
+      <div class="fr"><label class="lbl">Mão de obra (R$)</label><input type="number" id="osMao" step="0.01" value="${o?.maoDeObra||''}"/></div>
+      <div class="fr"><label class="lbl">Peças usadas</label><select id="osPeca"><option value="">Selecione peça...</option>${CACHE.produtos.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}</select></div>
+    </div>
+    <div class="fr"><label class="lbl">Observações</label><textarea id="osObs">${esc(o?.obs||'')}</textarea></div>`,
+  async()=>{
+    const veiculo=fv('osVeiculo').trim(),problema=fv('osProblema').trim();
+    if(!veiculo){alert('Informe o veículo');return}
+    const obj={clienteId:fv('osCliente')||null,veiculo,problema,status:fv('osStatus'),servicos:fv('osServicos').trim(),maoDeObra:parseFloat(fv('osMao'))||0,pecaId:fv('osPeca')||null,obs:fv('osObs').trim(),data:nowStr()};
+    try{
+      if(editId){await fsUpdate('os',editId,obj)}else{await fsAdd('os',obj)}
+      closeModal();toast(editId?'OS atualizada!':'OS criada!')
+    }catch(e){toast('Erro ao salvar','err')}
+  })
+}
+window.delOS = async function(id){if(!confirm('Excluir esta OS?'))return;try{await fsDel('os',id);toast('OS excluída')}catch(e){toast('Erro','err')}}
+window.mudarStatusOS = async function(id,status){
+  try{await fsUpdate('os',id,{status});toast('Status atualizado!')}catch(e){toast('Erro','err')}
+}
+
+function rOS(){
+  const lista=[...(CACHE.os||[])].sort((a,b)=>b._ts-a._ts);
+  const abertas=lista.filter(o=>o.status==='Aberta').length;
+  const andamento=lista.filter(o=>o.status==='Em andamento').length;
+  const concluidas=lista.filter(o=>o.status==='Concluída').length;
+  document.getElementById('content').innerHTML=`
+  <div class="pg-title"><div><h2>Ordens de Serviço</h2><small>${lista.length} OS registrada(s)</small></div>
+    <button class="btn btn-accent" onclick="modalOS()"><i class="ti ti-plus"></i>Nova OS</button>
+  </div>
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-clock"></i></div><div class="stat-l">Abertas</div><div class="stat-v o">${abertas}</div></div>
+    <div class="stat"><div class="stat-ic" style="background:#dbeafe;color:#2563eb"><i class="ti ti-tool"></i></div><div class="stat-l">Em andamento</div><div class="stat-v ac">${andamento}</div></div>
+    <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-circle-check"></i></div><div class="stat-l">Concluídas</div><div class="stat-v g">${concluidas}</div></div>
+  </div>
+  <div class="panel"><div class="list">${lista.length?lista.map(o=>{
+    const cn=o.clienteId?(CACHE.clientes.find(c=>c.id===o.clienteId)?.nome||'—'):'Avulso';
+    const tg=OS_TAGS[o.status]||'tag-func';
+    const cor=o.status==='Concluída'?'#16a34a':o.status==='Cancelada'?'#dc2626':o.status==='Em andamento'?'#2563eb':'#d97706';
+    return`<div class="ri" style="border-left:3px solid ${cor}">
+      <div class="ii">
+        <div class="in" style="display:flex;align-items:center;gap:7px">
+          <span>${esc(cn)} · ${esc(o.veiculo)}</span>
+          <span class="tag ${tg}" style="font-size:10px">${esc(o.status)}</span>
+        </div>
+        <div class="id">${o.data||''} · ${esc(o.problema||'')}${o.maoDeObra?' · MO: R$ '+parseFloat(o.maoDeObra).toFixed(2):''}</div>
+        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
+          ${OS_STATUS.filter(s=>s!==o.status).map(s=>`<button class="btn btn-out" style="padding:3px 9px;font-size:10px" onclick="mudarStatusOS('${o.id}','${s}')">${s}</button>`).join('')}
+        </div>
+      </div>
+      <div class="ri-actions">
+        <button class="ic-btn edit" onclick="modalOS('${o.id}')"><i class="ti ti-edit"></i></button>
+        <button class="ic-btn del" onclick="delOS('${o.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty"><i class="ti ti-clipboard-list"></i>Nenhuma OS registrada</div>'}</div></div>`;
+}
+
+// ═══════════════════════════════════════
+// CAIXA
+// ═══════════════════════════════════════
+window.modalCaixa = async function(id=null){
+  const m=id?CACHE.caixa?.find(x=>x.id===id):null; editId=id;
+  openModal(id?'Editar lançamento':'Novo lançamento de caixa','cash',`
+    <div class="r2">
+      <div class="fr"><label class="lbl">Tipo *</label>
+        <select id="cxTipo"><option value="entrada" ${(!m||m.tipo==='entrada')?'selected':''}>Entrada (+)</option><option value="saida" ${m?.tipo==='saida'?'selected':''}>Saída (-)</option></select>
+      </div>
+      <div class="fr"><label class="lbl">Valor (R$) *</label><input type="number" id="cxValor" step="0.01" value="${m?.valor||''}"/></div>
+    </div>
+    <div class="fr"><label class="lbl">Descrição *</label><input type="text" id="cxDesc" value="${esc(m?.descricao||'')}" placeholder="Ex: Venda à vista, Pagamento fornecedor..."/></div>
+    <div class="r2">
+      <div class="fr"><label class="lbl">Categoria</label>
+        <select id="cxCat">
+          <option ${m?.cat==='Venda'?'selected':''}>Venda</option>
+          <option ${m?.cat==='Serviço'?'selected':''}>Serviço</option>
+          <option ${m?.cat==='Fornecedor'?'selected':''}>Fornecedor</option>
+          <option ${m?.cat==='Combustível'?'selected':''}>Combustível</option>
+          <option ${m?.cat==='Salário'?'selected':''}>Salário</option>
+          <option ${m?.cat==='Aluguel'?'selected':''}>Aluguel</option>
+          <option ${m?.cat==='Outros'?'selected':''}>Outros</option>
+        </select>
+      </div>
+      <div class="fr"><label class="lbl">Forma de pagamento</label>
+        <select id="cxPgto">
+          <option ${m?.pgto==='Dinheiro'?'selected':''}>Dinheiro</option>
+          <option ${m?.pgto==='PIX'?'selected':''}>PIX</option>
+          <option ${m?.pgto==='Cartão Débito'?'selected':''}>Cartão Débito</option>
+          <option ${m?.pgto==='Cartão Crédito'?'selected':''}>Cartão Crédito</option>
+          <option ${m?.pgto==='Transferência'?'selected':''}>Transferência</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr"><label class="lbl">Observação</label><textarea id="cxObs">${esc(m?.obs||'')}</textarea></div>`,
+  async()=>{
+    const desc=fv('cxDesc').trim(),valor=parseFloat(fv('cxValor'))||0;
+    if(!desc){alert('Informe a descrição');return}
+    if(valor<=0){alert('Informe o valor');return}
+    const obj={tipo:fv('cxTipo'),valor,descricao:desc,cat:fv('cxCat'),pgto:fv('cxPgto'),obs:fv('cxObs').trim(),data:nowStr()};
+    try{
+      if(editId){await fsUpdate('caixa',editId,obj)}else{await fsAdd('caixa',obj)}
+      closeModal();toast(editId?'Atualizado!':'Lançamento registrado!')
+    }catch(e){toast('Erro','err')}
+  })
+}
+window.delCaixa = async function(id){if(!confirm('Excluir?'))return;try{await fsDel('caixa',id);toast('Excluído')}catch(e){toast('Erro','err')}}
+
+function rCaixa(){
+  const lista=[...(CACHE.caixa||[])].sort((a,b)=>b._ts-a._ts);
+  const entradas=lista.filter(m=>m.tipo==='entrada').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  const saidas=lista.filter(m=>m.tipo==='saida').reduce((a,m)=>a+(parseFloat(m.valor)||0),0);
+  const saldo=entradas-saidas;
+  document.getElementById('content').innerHTML=`
+  <div class="pg-title"><div><h2>Caixa</h2><small>Movimento financeiro da loja</small></div>
+    <button class="btn btn-accent" onclick="modalCaixa()"><i class="ti ti-plus"></i>Lançamento</button>
+  </div>
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-arrow-down-circle"></i></div><div class="stat-l">Total entradas</div><div class="stat-v g">${fmt(entradas)}</div></div>
+    <div class="stat"><div class="stat-ic" style="background:#fee2e2;color:#dc2626"><i class="ti ti-arrow-up-circle"></i></div><div class="stat-l">Total saídas</div><div class="stat-v r">${fmt(saidas)}</div></div>
+    <div class="stat"><div class="stat-ic" style="background:${saldo>=0?'#dbeafe':'#fee2e2'};color:${saldo>=0?'#2563eb':'#dc2626'}"><i class="ti ti-wallet"></i></div><div class="stat-l">Saldo atual</div><div class="stat-v ${saldo>=0?'ac':'r'}">${fmt(saldo)}</div></div>
+  </div>
+  <div class="panel"><div class="list">${lista.length?lista.map(m=>`
+    <div class="ri" style="border-left:3px solid ${m.tipo==='entrada'?'#16a34a':'#dc2626'}">
+      <div class="av ${m.tipo==='entrada'?'av-g':'av-r'}"><i class="ti ti-${m.tipo==='entrada'?'arrow-down-circle':'arrow-up-circle'}"></i></div>
+      <div class="ii">
+        <div class="in">${esc(m.descricao)} <span style="font-size:10px;color:var(--textm)">· ${esc(m.cat||'')} · ${esc(m.pgto||'')}</span></div>
+        <div class="id">${m.data||''}${m.obs?' · '+esc(m.obs):''}</div>
+      </div>
+      <div class="iv ${m.tipo==='entrada'?'g':'r'}">${m.tipo==='entrada'?'+':'-'}${fmt(m.valor)}</div>
+      <div class="ri-actions">
+        <button class="ic-btn edit" onclick="modalCaixa('${m.id}')"><i class="ti ti-edit"></i></button>
+        <button class="ic-btn del" onclick="delCaixa('${m.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`).join(''):'<div class="empty"><i class="ti ti-cash"></i>Nenhum lançamento registrado</div>'}</div></div>`;
+}
+
+// ═══════════════════════════════════════
+// CONTAS A PAGAR / RECEBER
+// ═══════════════════════════════════════
+window.modalConta = async function(id=null){
+  const ct=id?CACHE.contas?.find(x=>x.id===id):null; editId=id;
+  openModal(id?'Editar conta':'Nova conta','credit-card',`
+    <div class="r2">
+      <div class="fr"><label class="lbl">Tipo *</label>
+        <select id="ctTipo"><option value="receber" ${(!ct||ct.tipo==='receber')?'selected':''}>A Receber</option><option value="pagar" ${ct?.tipo==='pagar'?'selected':''}>A Pagar</option></select>
+      </div>
+      <div class="fr"><label class="lbl">Valor (R$) *</label><input type="number" id="ctValor" step="0.01" value="${ct?.valor||''}"/></div>
+    </div>
+    <div class="fr"><label class="lbl">Descrição *</label><input type="text" id="ctDesc" value="${esc(ct?.descricao||'')}" placeholder="Ex: Fiado João, Fatura fornecedor..."/></div>
+    <div class="r2">
+      <div class="fr"><label class="lbl">Cliente / Fornecedor</label>
+        <select id="ctCliente"><option value="">Nenhum</option>${CACHE.clientes.map(cl=>`<option value="${cl.id}" ${ct?.clienteId===cl.id?'selected':''}>${esc(cl.nome)}</option>`).join('')}</select>
+      </div>
+      <div class="fr"><label class="lbl">Vencimento</label><input type="date" id="ctVenc" value="${ct?.vencimento||''}"/></div>
+    </div>
+    <div class="fr"><label class="lbl">Status</label>
+      <select id="ctStatus"><option value="pendente" ${(!ct||ct.status==='pendente')?'selected':''}>Pendente</option><option value="pago" ${ct?.status==='pago'?'selected':''}>Pago/Recebido</option><option value="vencido" ${ct?.status==='vencido'?'selected':''}>Vencido</option></select>
+    </div>
+    <div class="fr"><label class="lbl">Observação</label><textarea id="ctObs">${esc(ct?.obs||'')}</textarea></div>`,
+  async()=>{
+    const desc=fv('ctDesc').trim(),valor=parseFloat(fv('ctValor'))||0;
+    if(!desc){alert('Informe a descrição');return}
+    if(valor<=0){alert('Informe o valor');return}
+    const obj={tipo:fv('ctTipo'),valor,descricao:desc,clienteId:fv('ctCliente')||null,vencimento:fv('ctVenc'),status:fv('ctStatus'),obs:fv('ctObs').trim(),data:nowStr()};
+    try{
+      if(editId){await fsUpdate('contas',editId,obj)}else{await fsAdd('contas',obj)}
+      closeModal();toast(editId?'Conta atualizada!':'Conta registrada!')
+    }catch(e){toast('Erro','err')}
+  })
+}
+window.delConta = async function(id){if(!confirm('Excluir?'))return;try{await fsDel('contas',id);toast('Excluída')}catch(e){toast('Erro','err')}}
+window.quitarConta = async function(id){
+  try{await fsUpdate('contas',id,{status:'pago'});toast('Marcada como paga!')}catch(e){toast('Erro','err')}
+}
+
+function rContas(){
+  const lista=[...(CACHE.contas||[])].sort((a,b)=>b._ts-a._ts);
+  const receber=lista.filter(c=>c.tipo==='receber'&&c.status==='pendente').reduce((a,c)=>a+(parseFloat(c.valor)||0),0);
+  const pagar=lista.filter(c=>c.tipo==='pagar'&&c.status==='pendente').reduce((a,c)=>a+(parseFloat(c.valor)||0),0);
+  const vencidas=lista.filter(c=>c.status==='vencido').length;
+  document.getElementById('content').innerHTML=`
+  <div class="pg-title"><div><h2>Contas</h2><small>${lista.length} lançamento(s)</small></div>
+    <button class="btn btn-accent" onclick="modalConta()"><i class="ti ti-plus"></i>Nova conta</button>
+  </div>
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a"><i class="ti ti-arrow-down-circle"></i></div><div class="stat-l">A receber</div><div class="stat-v g">${fmt(receber)}</div></div>
+    <div class="stat"><div class="stat-ic" style="background:#fee2e2;color:#dc2626"><i class="ti ti-arrow-up-circle"></i></div><div class="stat-l">A pagar</div><div class="stat-v r">${fmt(pagar)}</div></div>
+    <div class="stat"><div class="stat-ic" style="background:#fef3c7;color:#d97706"><i class="ti ti-alert-triangle"></i></div><div class="stat-l">Vencidas</div><div class="stat-v o">${vencidas}</div></div>
+  </div>
+  <div class="panel"><div class="list">${lista.length?lista.map(ct=>{
+    const cn=ct.clienteId?(CACHE.clientes.find(c=>c.id===ct.clienteId)?.nome||''):''
+    const corBorda=ct.tipo==='receber'?'#16a34a':'#dc2626';
+    const stTag=ct.status==='pago'?'tag-ok':ct.status==='vencido'?'tag-zero':'tag-crit';
+    const stLabel=ct.status==='pago'?'Pago':ct.status==='vencido'?'Vencido':'Pendente';
+    return`<div class="ri" style="border-left:3px solid ${corBorda}">
+      <div class="av ${ct.tipo==='receber'?'av-g':'av-r'}"><i class="ti ti-${ct.tipo==='receber'?'arrow-down-circle':'arrow-up-circle'}"></i></div>
+      <div class="ii">
+        <div class="in" style="display:flex;align-items:center;gap:7px">
+          ${esc(ct.descricao)}${cn?' — '+esc(cn):''}
+          <span class="tag ${stTag}">${stLabel}</span>
+        </div>
+        <div class="id">${ct.tipo==='receber'?'A receber':'A pagar'}${ct.vencimento?' · Vence: '+ct.vencimento:''}</div>
+      </div>
+      <div class="iv ${ct.tipo==='receber'?'g':'r'}">${fmt(ct.valor)}</div>
+      <div class="ri-actions">
+        ${ct.status==='pendente'?`<button class="ic-btn edit" onclick="quitarConta('${ct.id}')" title="Marcar como pago" style="color:var(--green)"><i class="ti ti-circle-check"></i></button>`:''}
+        <button class="ic-btn edit" onclick="modalConta('${ct.id}')"><i class="ti ti-edit"></i></button>
+        <button class="ic-btn del" onclick="delConta('${ct.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty"><i class="ti ti-credit-card"></i>Nenhuma conta registrada</div>'}</div></div>`;
+}
+
+
 </script>
 </body>
 </html>
