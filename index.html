@@ -590,7 +590,7 @@ window.rmItemVenda = function(i){vendaItens.splice(i,1);rVendas()}
 window.finalizarVenda = async function(){
   if(!vendaItens.length){alert('Adicione ao menos um item');return}
   const total=vendaItens.reduce((a,i)=>a+i.total,0),custoTotal=vendaItens.reduce((a,i)=>a+i.custoTotal,0);
-  const obj={clienteId:fv('vCli')||null,servico:fv('vServ').trim(),pgto:fv('vPgto'),itens:[...vendaItens],total,custoTotal,lucro:total-custoTotal,data:nowStr(),vendedor:currentUser?.nome||''};
+  const obj={clienteId:fv('vCli')||null,servico:fv('vServ').trim(),pgto:fv('vPgto'),itens:[.....vendaItens],total,custoTotal,lucro:total-custoTotal,data:nowStr(),vendedor:currentUser?.nome||''};
   try{await fsAdd('vendas',obj);vendaItens=[];toast('Venda finalizada!');rVendas()}catch(e){toast('Erro ao salvar','err')}
 }
 window.editVenda = async function(id){
