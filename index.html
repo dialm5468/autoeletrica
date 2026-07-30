@@ -11,21 +11,29 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.9.0/dist/tabler-icons.min.css"/>
 <style>
 :root{
-  --bg:#f1f5f9;--surface:#fff;--surfalt:#f8fafc;--border:#e2e8f0;--borderc:#cbd5e1;
-  --navy:#0f172a;--navy2:#1e293b;--accent:#3b82f6;--accent2:#2563eb;
-  --green:#16a34a;--gbg:#dcfce7;--gtxt:#14532d;
-  --red:#dc2626;--rbg:#fee2e2;--rtxt:#7f1d1d;
-  --amber:#d97706;--abg:#fef3c7;--atxt:#78350f;
-  --purple:#7c3aed;--pbg:#ede9fe;--ptxt:#4c1d95;
-  --blue:#2563eb;--bbg:#dbeafe;--btxt:#1e3a8a;
-  --teal:#0d9488;--tbg:#ccfbf1;--ttxt:#134e4a;
-  --text:#0f172a;--texts:#475569;--textm:#94a3b8;
-  --radius:10px;--radius2:14px;
-  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --shadow2:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+  /* Tema claro profissional - inspirado em ERP */
+  --bg:#eef2f7;
+  --surface:#ffffff;
+  --surfalt:#f4f6f9;
+  --border:#dde3ed;
+  --borderc:#b8c4d8;
+  --navy:#1a3a5c;
+  --navy2:#1e4976;
+  --accent:#1e6fb5;
+  --accent2:#155fa0;
+  --green:#1a7a3c;--gbg:#e8f5ee;--gtxt:#0f4d24;
+  --red:#c0392b;--rbg:#fdecea;--rtxt:#7b1c14;
+  --amber:#c47b00;--abg:#fff8e6;--atxt:#7a4c00;
+  --purple:#6b3fb5;--pbg:#f0ebff;--ptxt:#3d2070;
+  --blue:#1a5fa0;--bbg:#e8f0fb;--btxt:#0d3a6e;
+  --teal:#0a7a6a;--tbg:#e6f7f4;--ttxt:#054d42;
+  --text:#1a2535;--texts:#3a4a60;--textm:#7a8fa8;
+  --radius:6px;--radius2:8px;
+  --shadow:0 1px 4px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06);
+  --shadow2:0 3px 8px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 
 /* SPLASH */
 .splash{position:fixed;inset:0;background:var(--navy2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;color:white}
@@ -37,7 +45,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* LOGIN */
 .login-wrap{display:none;flex;min-height:100vh}
-.login-left{width:380px;background:var(--navy2);color:#fff;padding:48px 40px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden}
+.login-left{width:380px;background:linear-gradient(160deg,#1e4976 0%,#1a3a5c 100%);color:#fff;padding:48px 40px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden}
 .login-left::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(59,130,246,.25) 0%,transparent 70%);pointer-events:none}
 .ll-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
 .ll-icon{width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -65,7 +73,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* APP */
 .app{display:none;min-height:100vh}
-.sidebar{width:220px;background:var(--navy2);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;box-shadow:4px 0 20px rgba(0,0,0,.15)}
+.sidebar{width:220px;background:#1e4976;color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;box-shadow:3px 0 12px rgba(0,0,0,.18)}
 .sb-logo{padding:16px 14px;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;border-bottom:1px solid rgba(255,255,255,.07)}
 .sb-logo-ic{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .sb-sync{display:flex;align-items:center;gap:5px;font-size:10px;opacity:.5;margin-left:auto}
@@ -76,7 +84,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sb-btn{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border:none;background:none;text-align:left;width:100%;font-family:inherit;transition:all .12s;font-weight:500}
 .sb-btn i{font-size:17px;width:18px;flex-shrink:0}
 .sb-btn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
-.sb-btn.active{background:rgba(59,130,246,.2);color:#60a5fa}
+.sb-btn.active{background:rgba(255,255,255,.18);color:#ffffff;font-weight:700}
 .sb-user{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
 .sb-av{width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
 .sb-nm{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -84,28 +92,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sb-out{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:15px;margin-left:auto;flex-shrink:0;padding:4px;border-radius:6px;transition:all .12s}
 .sb-out:hover{color:rgba(255,255,255,.7);background:rgba(255,255,255,.08)}
 .main{margin-left:220px;display:flex;flex-direction:column;min-height:100vh}
-.topbar{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:var(--shadow)}
-.tb-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.topbar{padding:11px 24px;border-bottom:2px solid var(--accent);background:#ffffff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.tb-title{font-size:15px;font-weight:700;letter-spacing:-.2px;color:#1a3a5c}
 .tb-sub{font-size:11px;color:var(--textm);margin-top:1px}
-.tb-sync{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--textm);background:var(--surfalt);padding:5px 10px;border-radius:20px;border:1px solid var(--border)}
+.tb-sync{display:flex;align-items:center;gap:6px;font-size:11px;color:#5a7090;background:#f0f4fa;padding:5px 12px;border-radius:20px;border:1px solid #c8d4e4;font-weight:500}
 .content{padding:20px 24px;flex:1}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.stat{background:var(--surface);border-radius:var(--radius2);padding:14px 16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.stat{background:#ffffff;border-radius:var(--radius2);padding:12px 16px;border:1px solid var(--border);border-left:4px solid var(--accent);box-shadow:var(--shadow)}
 .stat-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:6px}
-.stat-l{font-size:11px;color:var(--textm);font-weight:500}
-.stat-v{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.stat-l{font-size:11px;color:#5a7090;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.stat-v{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
 .g{color:var(--green)}.r{color:var(--red)}.b{color:var(--navy)}.o{color:var(--amber)}.ac{color:var(--accent)}
 
 /* PANELS */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.panel{background:#ffffff;border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:var(--radius2);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.pt{font-size:11px;font-weight:700;color:var(--texts);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.pt{font-size:11px;font-weight:700;color:#1e4976;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid #dde3ed;margin-bottom:10px!important}
 
 /* LISTS */
 .list{display:flex;flex-direction:column;gap:6px}
-.ri{background:var(--surfalt);border-radius:var(--radius);padding:10px 12px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);transition:border-color .12s}
+.ri{background:#f8fafd;border-radius:var(--radius);padding:9px 12px;display:flex;align-items:center;gap:10px;border:1px solid #dde3ed;transition:border-color .12s}
 .ri:hover{border-color:var(--borderc)}
 .av{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;font-weight:700}
 .av-g{background:var(--gbg);color:var(--gtxt)}.av-r{background:var(--rbg);color:var(--rtxt)}.av-b{background:var(--bbg);color:var(--btxt)}.av-p{background:var(--pbg);color:var(--ptxt)}.av-a{background:var(--abg);color:var(--atxt)}.av-t{background:var(--tbg);color:var(--ttxt)}.av-ac{background:#dbeafe;color:#1d4ed8}
@@ -115,7 +123,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .iv{font-size:12px;font-weight:700;text-align:right;flex-shrink:0}
 .ri-actions{display:flex;gap:3px;flex-shrink:0;margin-left:4px}
 .ic-btn{background:none;border:none;cursor:pointer;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .12s;color:var(--textm)}
-.ic-btn.edit:hover{color:var(--accent);background:var(--bbg)}
+.ic-btn.edit:hover{color:#1e6fb5;background:#e8f0fb}
 .ic-btn.del:hover{color:var(--red);background:var(--rbg)}
 .empty{text-align:center;padding:28px;color:var(--textm);font-size:12px}
 .empty i{font-size:30px;display:block;margin-bottom:8px;opacity:.4}
@@ -134,10 +142,10 @@ textarea{resize:none;height:60px;line-height:1.5}
 .btn{padding:9px 15px;border:none;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:all .12s}
 .btn:active{transform:scale(.97)}
 .btn-navy{background:var(--navy2);color:#fff}
-.btn-accent{background:var(--accent2);color:#fff}
-.btn-accent:hover{background:var(--accent)}
-.btn-green{background:var(--green);color:#fff}
-.btn-out{background:#fff;border:1.5px solid var(--borderc);color:var(--texts)}
+.btn-accent{background:#1e6fb5;color:#fff;border:1px solid #155fa0}
+.btn-accent:hover{background:#155fa0}
+.btn-green{background:#1a7a3c;color:#fff;border:1px solid #145e2e}
+.btn-out{background:#ffffff;border:1.5px solid #b8c4d8;color:#3a4a60}
 .btn-out:hover{border-color:var(--accent);color:var(--accent)}
 .btn-full{width:100%;justify-content:center}
 .sw{position:relative;margin-bottom:10px}
@@ -145,17 +153,17 @@ textarea{resize:none;height:60px;line-height:1.5}
 .sw input{padding-left:33px}
 .tag{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700}
 .tag-admin{background:var(--pbg);color:var(--ptxt)}.tag-func{background:var(--bbg);color:var(--btxt)}
-.tag-ok{background:var(--gbg);color:var(--gtxt)}.tag-crit{background:var(--abg);color:var(--atxt)}.tag-zero{background:var(--rbg);color:var(--rtxt)}
-.detail-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.tag-ok{background:#e8f5ee;color:#0f5c2e;border:1px solid #a8d5b8}.tag-crit{background:#fff4e0;color:#7a4c00;border:1px solid #f0c070}.tag-zero{background:#fdecea;color:#8a2020;border:1px solid #f0a8a0}
+.detail-row{display:flex;justify-content:space-between;padding:7px 4px;border-bottom:1px solid #eef1f6;font-size:13px}
 .detail-row:last-child{border-bottom:none}
 .dr-l{color:var(--texts)}.dr-v{font-weight:700}
-.alert-box{border-left:3px solid var(--red);background:var(--rbg);border-radius:0 var(--radius) var(--radius) 0;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+.alert-box{border-left:4px solid #c0392b;background:#fdecea;border-radius:0 var(--radius) var(--radius) 0;padding:9px 13px;margin-bottom:7px;display:flex;align-items:center;gap:9px;box-shadow:0 1px 3px rgba(192,57,43,.1)}
 .alert-box.warn{border-color:var(--amber);background:var(--abg)}
 
 /* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
 .modal-ov.show{display:flex}
-.modal{background:#ffffff;color:#0f172a;border-radius:var(--radius2);padding:22px;width:380px;max-width:94vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal{background:#ffffff;color:#1a2535;border-radius:var(--radius2);padding:22px;width:400px;max-width:94vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18);border-top:4px solid #1e6fb5}
 .modal .lbl,.modal label{color:#475569}
 .modal .modal-h{color:#0f172a}
 .modal .fr{color:#0f172a}
@@ -171,25 +179,18 @@ textarea{resize:none;height:60px;line-height:1.5}
 .prog-bg{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:5px}
 .prog-fill{height:5px;border-radius:3px}
 .pg-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.pg-title h2{font-size:18px;font-weight:700}
+.pg-title h2{font-size:17px;font-weight:700;color:#1a3a5c}
 .pg-title small{font-size:12px;color:var(--textm)}
 
 @media(max-width:768px){.stats{grid-template-columns:1fr 1fr}.main{margin-left:200px}}
 @media(max-width:560px){.sidebar{width:0;overflow:hidden}.main{margin-left:0}.stats{grid-template-columns:1fr 1fr}.r2,.r3{grid-template-columns:1fr}}
-@media(prefers-color-scheme:dark){
-  :root{--bg:#0d1117;--surface:#161b22;--surfalt:#1c2128;--border:#30363d;--borderc:#484f58;--text:#e6edf3;--texts:#8b949e;--textm:#484f58;--gbg:#0a2f1a;--gtxt:#3fb950;--rbg:#2d1117;--rtxt:#f85149;--abg:#271b00;--atxt:#e3b341;--bbg:#0d1f3c;--btxt:#58a6ff;--pbg:#1a0f2e;--ptxt:#bc8cff;--tbg:#0a2520;--ttxt:#39d353}
-  body{background:#0d1117}
-}
+/* dark mode desativado - tema claro profissional */
 </style>
 </head>
 <body>
 
-<!-- SPLASH -->
-<div class="splash" id="splash">
-  <div class="splash-logo"><i class="ti ti-bolt"></i></div>
-  <div class="splash-title">AutoElétrica Pro</div>
-  <div class="splash-sub"><div class="spinner"></div><span id="splashMsg">Conectando ao Firebase...</span></div>
-</div>
+<!-- SPLASH removido - login aparece direto -->
+<div class="splash" id="splash" style="display:none"></div>
 
 <!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
@@ -277,8 +278,8 @@ textarea{resize:none;height:60px;line-height:1.5}
 
 <!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getFirestore, collection, doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBj50Z4pwRnShYFn2NdNdTyBe5ocMyNjKA",
@@ -381,34 +382,24 @@ function showLogin(){
   document.getElementById('loginWrap').style.display='flex';
 }
 
-async function init(){
-  // Timeout de segurança — se Firebase demorar mais de 8s, mostra login mesmo assim
-  const splashMsg = document.getElementById('splashMsg');
-  if(splashMsg) splashMsg.textContent = 'Verificando banco de dados...';
+// Mostra login IMEDIATAMENTE com usuário padrão
+// Firebase conecta em background depois
+CACHE.usuarios = [{id:'admin_default',nome:'Administrador',login:'admin',senha:'admin123',role:'admin'}];
+showLogin();
 
-  const timeout = setTimeout(()=>{
-    console.warn('Firebase timeout — modo offline');
-    if(splashMsg) splashMsg.textContent = 'Sem conexão — entrando em modo offline...';
-    CACHE.usuarios=[{id:'admin_default',nome:'Administrador',login:'admin',senha:'admin123',role:'admin'}];
-    setSyncStatus(false);
-    showLogin();
-  }, 8000);
-
+// Conectar Firebase em background (não bloqueia o login)
+async function initFirebase(){
   try {
     const snap = await getDocs(collection(db,'usuarios'));
-    clearTimeout(timeout);
     if(snap.empty){
-      // Primeiro acesso — criar admin padrão
       await setDoc(doc(db,'usuarios','admin_default'),{
         nome:'Administrador',login:'admin',senha:'admin123',role:'admin',_ts:Date.now()
       });
       await setDoc(doc(db,'config_col','main'),{
-        masterPass:'mestre2024',alertaTel1:'',alertaTel2:'',_ts:Date.now()
+        masterPass:'mestre2024',_ts:Date.now()
       });
-      CACHE.usuarios=[{id:'admin_default',nome:'Administrador',login:'admin',senha:'admin123',role:'admin'}];
     } else {
       CACHE.usuarios = snapToArr(snap);
-      // Carregar config
       try {
         const cfgSnap = await getDocs(collection(db,'config_col'));
         const cfg = cfgSnap.docs.find(d=>d.id==='main');
@@ -416,18 +407,13 @@ async function init(){
       } catch(e2){}
     }
     setSyncStatus(true);
+    console.log('Firebase conectado!');
   } catch(e){
-    clearTimeout(timeout);
-    console.error('Firebase erro:', e);
-    // Modo offline — permite login com admin padrão
-    if(!CACHE.usuarios.length){
-      CACHE.usuarios=[{id:'admin_default',nome:'Administrador',login:'admin',senha:'admin123',role:'admin'}];
-    }
     setSyncStatus(false);
+    console.warn('Firebase offline:', e.message);
   }
-  showLogin();
 }
-init();
+initFirebase();
 
 // ── AUTH ──
 window.doLogin = function(){
@@ -590,7 +576,7 @@ window.rmItemVenda = function(i){vendaItens.splice(i,1);rVendas()}
 window.finalizarVenda = async function(){
   if(!vendaItens.length){alert('Adicione ao menos um item');return}
   const total=vendaItens.reduce((a,i)=>a+i.total,0),custoTotal=vendaItens.reduce((a,i)=>a+i.custoTotal,0);
-  const obj={clienteId:fv('vCli')||null,servico:fv('vServ').trim(),pgto:fv('vPgto'),itens:[.....vendaItens],total,custoTotal,lucro:total-custoTotal,data:nowStr(),vendedor:currentUser?.nome||''};
+  const obj={clienteId:fv('vCli')||null,servico:fv('vServ').trim(),pgto:fv('vPgto'),itens:[...vendaItens],total,custoTotal,lucro:total-custoTotal,data:nowStr(),vendedor:currentUser?.nome||''};
   try{await fsAdd('vendas',obj);vendaItens=[];toast('Venda finalizada!');rVendas()}catch(e){toast('Erro ao salvar','err')}
 }
 window.editVenda = async function(id){
